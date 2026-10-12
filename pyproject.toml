@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "julialang"
+# Real wheels get the bundled Julia version (see tools/build_wheel.py); this is only for dev installs.
+version = "0.0.0.dev0"
+description = "Julia in a wheel: pip install julialang, then run `julia`. Includes a small version manager."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Mohammad Raziei", email = "mohammadraziei1375@gmail.com" }]
+keywords = ["julia", "julialang", "binary", "installer", "wheel"]
+classifiers = ["Programming Language :: Python :: 3"]
+
+[project.urls]
+Source = "https://github.com/mohammadraziei/julialang"
+Issues = "https://github.com/mohammadraziei/julialang/issues"
+
+[project.scripts]
+julia = "julialang.launcher:main"
+julialang = "julialang.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["julialang*"]

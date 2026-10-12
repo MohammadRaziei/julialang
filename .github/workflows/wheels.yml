@@ -1,0 +1,144 @@
+name: Build wheels
+
+# Builds one wheel per platform that bundles the newest Julia from julia-list.json, smoke-tests each wheel on
+# a native runner, then publishes a GitHub release tagged vX.Y.Z (and uploads to PyPI if enabled).
+on:
+  push:
+    branches: [main]
+    paths: ["julia-list.json"] # a human edit; the sync workflow dispatches this workflow itself
+  workflow_dispatch:
+    inputs:
+      post_release:
+        description: "Re-release the current Julia version as .postN (for packaging fixes)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wheels
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      julia: ${{ steps.v.outputs.julia }}
+      version: ${{ steps.v.outputs.version }}
+      post: ${{ steps.v.outputs.post }}
+      skip: ${{ steps.v.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tags are needed to pick the next version
+
+      - id: v
+        env:
+          POST_RELEASE: ${{ inputs.post_release && 'true' || 'false' }}
+        run: |
+          julia=$(jq -r '.latest // empty' julia-list.json)
+          if [ -z "$julia" ]; then
+            echo "julia-list.json is empty; nothing to build."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          post=0
+          version="$julia"
+          if git rev-parse -q --verify "refs/tags/v$julia" > /dev/null; then
+            if [ "$POST_RELEASE" != "true" ]; then
+              echo "v$julia is already released; nothing new to build."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            post=1
+            while git rev-parse -q --verify "refs/tags/v$julia.post$post" > /dev/null; do post=$((post + 1)); done
+            version="$julia.post$post"
+          fi
+          {
+            echo "skip=false"
+            echo "julia=$julia"
+            echo "post=$post"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+          echo "Will build and release $version"
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.skip != 'true'
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { platform: linux-x86_64, runner: ubuntu-latest }
+          - { platform: linux-aarch64, runner: ubuntu-24.04-arm }
+          - { platform: macos-aarch64, runner: macos-latest }
+          - { platform: macos-x86_64, runner: macos-15-intel }
+          - { platform: windows-x86_64, runner: windows-latest }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build wheel
+        shell: bash
+        env:
+          JULIA: ${{ needs.plan.outputs.julia }}
+          POST: ${{ needs.plan.outputs.post }}
+        run: python tools/build_wheel.py --platform "${{ matrix.platform }}" --version "$JULIA" --post "$POST" --out dist
+
+      - name: Install and smoke-test
+        shell: bash
+        env:
+          JULIA: ${{ needs.plan.outputs.julia }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          python -m pip install --no-index --no-deps --find-links dist "julialang==$VERSION"
+          julia --version
+          got=$(julia -e 'print(VERSION)')
+          echo "julia reports: $got"
+          [ "$got" = "$JULIA" ]
+          julialang status || true # the mirror list may be unreachable; that must not fail the build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.platform }}
+          path: dist/*.whl
+          if-no-files-found: error
+
+  release:
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # PyPI trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.plan.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: julialang ${{ needs.plan.outputs.version }}
+          body: |
+            Wheels bundling Julia ${{ needs.plan.outputs.julia }}.
+            `pip install julialang` (or download a wheel below), then run `julia`. Manage versions with `julialang`.
+          files: dist/*.whl
+          make_latest: true
+
+      # Needs trusted publishing configured on PyPI and a repository variable PUBLISH_PYPI=true.
+      # Julia wheels are > 100 MB, so the project's file size limit must be raised on PyPI first.
+      - name: Publish to PyPI
+        if: ${{ vars.PUBLISH_PYPI == 'true' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+          skip-existing: true
