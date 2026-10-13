@@ -1,5 +1,7 @@
 name: Sync Julia binaries
 
+# Crawls julialang.org, mirrors new Julia archives to the `__download__` prerelease and pushes julia-list.json.
+
 # Julia ships a patch release every month or two and a minor release about once a year, so a weekly check is
 # cheap (it exits immediately when nothing is new) and never leaves a release unmirrored for long.
 # Note: GitHub pauses scheduled workflows after 60 days without repository activity; re-enable them in the

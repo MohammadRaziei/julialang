@@ -75,7 +75,7 @@ def test_full_pipeline(tmp_path: Path):
 
     def sync():
         return run([
-            sys.executable, ROOT / "tools/sync.py", "--upstream", upstream.as_uri(), "--list-file", list_file,
+            sys.executable, ROOT / "tools/sync.py", "--source", "json", "--upstream", upstream.as_uri(), "--list-file", list_file,
             "--repo", "me/julialang", "--min-version", "9.0.0", "--base-url", mirror.as_uri(), "--keep-dir", mirror,
         ])
 
@@ -84,7 +84,7 @@ def test_full_pipeline(tmp_path: Path):
     assert "9.9.9" in sync()
     lst = json.loads(list_file.read_text())
     entry = lst["versions"]["9.9.9"]["files"]["linux-x86_64"]
-    assert lst["latest"] == "9.9.9" and entry["name"] == "julia-9.9.9-linux-x86_64.tar.gz"
+    assert lst["release_tag"] == "__download__" and lst["latest"] == "9.9.9" and entry["name"] == "julia-9.9.9-linux-x86_64.tar.gz"
     assert len(entry["md5"]) == 32 and len(entry["sha256"]) == 64
     assert list(lst["versions"]["9.9.9"]["files"]) == ["linux-x86_64"]  # installer + rc ignored
     assert (mirror / entry["name"]).exists()
@@ -96,15 +96,17 @@ def test_full_pipeline(tmp_path: Path):
 
     # 3. build the wheel: no symlinks inside, exec bits kept, manifest present
     dist = work / "dist"
-    run([sys.executable, ROOT / "tools/build_wheel.py", "--list", list_file, "--platform", M.platform_key(), "--out", dist])
-    wheel = next(dist.glob("julialang-9.9.9-py3-none-manylinux*.whl"))
+    run([sys.executable, ROOT / "tools/build_wheel.py", "--list", list_file, "--platform", M.platform_key(),
+         "--package-version", "0.5.7", "--out", dist])
+    wheel = next(dist.glob("julialang-0.5.7-py3-none-manylinux*.whl"))
     with zipfile.ZipFile(wheel) as z:
         names = z.namelist()
         assert "julialang/_julia/bin/julia" in names and "julialang/_julia/lib/libfoo.so.1" in names
         assert "julialang/_julia/lib/libfoo.so" not in names  # symlink lives in the manifest
         assert json.loads(z.read("julialang/_symlinks.json")) == {"lib/libfoo.so": "libfoo.so.1"}
         assert (z.getinfo("julialang/_julia/bin/julia").external_attr >> 16) & 0o111
-        assert "julialang-9.9.9.dist-info/RECORD" in names
+        assert "julialang-0.5.7.dist-info/RECORD" in names
+        assert json.loads(z.read("julialang/_bundled.json"))["version"] == "9.9.9"
 
     # 4. install it in a fresh venv and run it
     env_dir = tmp_path / "venv"

@@ -18,7 +18,7 @@ import zipfile
 from pathlib import Path
 
 DEFAULT_REPO = "mohammadraziei/julialang"
-RELEASE_TAG = "julia_binary"
+RELEASE_TAG = "__download__"  # prerelease that holds the mirrored archives
 
 PKG_DIR = Path(__file__).resolve().parent
 BUNDLED_DIR = PKG_DIR / "_julia"  # filled in when the wheel is built
@@ -29,7 +29,7 @@ EXE = "julia.exe" if os.name == "nt" else "julia"
 VERSION_RE = re.compile(r"\d+\.\d+\.\d+")
 
 
-def die(msg: str) -> "None":
+def die(msg: str) -> None:
     sys.exit(f"julialang: {msg}")
 
 
@@ -59,7 +59,7 @@ def save_config(cfg: dict) -> None:
 def list_url() -> str:
     repo = os.environ.get("JULIALANG_REPO", DEFAULT_REPO)
     return os.environ.get("JULIALANG_LIST_URL") or (
-        f"https://raw.githubusercontent.com/{repo}/main/julia-list.json"
+        f"https://raw.githubusercontent.com/{repo}/master/julia-list.json"
     )
 
 

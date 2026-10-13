@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "repo": "mohammadraziei/julialang",
-  "release_tag": "julia_binary",
+  "release_tag": "__download__",
   "latest": null,
   "updated": null,
   "versions": {}

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Assemble a platform wheel that bundles one Julia release (the same idea as the `ziglang` wheels).
 
-The Julia archive comes from the mirror (julia-list.json), is verified against md5 + sha256, and is repacked
+The wheel version is the package version (pyproject.toml / --package-version), not the Julia version; the
+bundled Julia is recorded in julialang/_bundled.json. The Julia archive comes from the mirror (julia-list.json), is verified against md5 + sha256, and is repacked
 under `julialang/_julia/`. Symlinks cannot live inside a wheel, so they are stored in `_symlinks.json` and
 recreated on first run (see julialang/manager.py). Unix file modes are preserved so pip restores the
 executable bits.
@@ -18,9 +19,10 @@ import stat
 import sys
 import tarfile
 import tempfile
-import tomllib
 import zipfile
 from pathlib import Path, PurePosixPath
+
+import tomllib
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -98,8 +100,8 @@ def metadata_text(meta: dict, version: str, platform_key: str, readme: str) -> s
     lines += [
         "License: MIT (this packaging); Julia and its bundled libraries keep their own licenses",
         f"Requires-Python: {meta['requires-python']}",
-        f"Classifier: Operating System :: {OS_CLASSIFIER[platform_key.split('-')[0]]}",
-        "Classifier: Programming Language :: Python :: 3",
+        f"Classifier: Operating System :: {OS_CLASSIFIER[platform_key.split('-')[0]]}",  # this wheel's OS only
+        *(f"Classifier: {c}" for c in meta.get("classifiers", []) if not c.startswith("Operating System ::")),
         "Description-Content-Type: text/markdown",
     ]
     return "\n".join(lines) + "\n\n" + readme
@@ -119,7 +121,7 @@ def build(a) -> Path:
 
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
     name = pyproject["name"]
-    version = julia + (f".post{a.post}" if a.post else "")
+    version = a.package_version or pyproject["version"]
     tag = WHEEL_TAGS[plat]
     dist_info = f"{name}-{version}.dist-info"
     out_dir = Path(a.out)
@@ -192,7 +194,7 @@ def build(a) -> Path:
             zf.writestr(zinfo(f"{dist_info}/RECORD", 0o644), buf.getvalue(), compresslevel=9)
 
     size = wheel_path.stat().st_size
-    print(f"Built {wheel_path} ({size / 1e6:.0f} MB; {n_files} files, {len(symlinks)} symlinks stored in a manifest)")
+    print(f"Built {wheel_path} (Julia {julia}; {size / 1e6:.0f} MB; {n_files} files, {len(symlinks)} symlinks in a manifest)")
     if size > PYPI_LIMIT:
         print("NOTE: larger than PyPI's default 100 MB file limit; uploading to PyPI needs a limit increase.")
     return wheel_path
@@ -203,7 +205,7 @@ def main() -> None:
     ap.add_argument("--list", default=str(ROOT / "julia-list.json"), help="julia-list.json to read")
     ap.add_argument("--platform", help=f"one of {', '.join(WHEEL_TAGS)} (default: this machine)")
     ap.add_argument("--version", default="latest", help="Julia version to bundle (default: latest in the list)")
-    ap.add_argument("--post", type=int, default=0, help="packaging revision, adds .postN to the wheel version")
+    ap.add_argument("--package-version", help="wheel version (default: version in pyproject.toml)")
     ap.add_argument("--archive", help="use this local archive instead of downloading (still verified)")
     ap.add_argument("--out", default="dist")
     build(ap.parse_args())

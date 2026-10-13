@@ -1,15 +1,19 @@
-name: Build wheels
+name: Test, build and release
 
-# Builds one wheel per platform that bundles the newest Julia from julia-list.json, smoke-tests each wheel on
-# a native runner, then publishes a GitHub release tagged vX.Y.Z (and uploads to PyPI if enabled).
+# Two modes, chosen by tools/release.py from the last commit:
+#   prepare  a new bundled Julia is available -> run tests, build + smoke-test the wheels, store them in the
+#            `__beta__` prerelease, then commit "chore(release): vX.Y.Z (Julia J)" (version, CHANGELOG, README).
+#   release  HEAD is that commit (by github-actions[bot]) -> tag vX.Y.Z and publish the wheels from `__beta__`.
+# Pushes made with GITHUB_TOKEN do not trigger workflows (workflow_dispatch is the exception), so the prepare
+# run starts the release run explicitly. A human push of julia-list.json starts a prepare run through `push`.
 on:
   push:
-    branches: [main]
-    paths: ["julia-list.json"] # a human edit; the sync workflow dispatches this workflow itself
+    branches: [master]
+    paths: ["julia-list.json"]
   workflow_dispatch:
     inputs:
-      post_release:
-        description: "Re-release the current Julia version as .postN (for packaging fixes)"
+      force:
+        description: "Prepare a release even if the bundled Julia did not change"
         type: boolean
         default: false
 
@@ -17,55 +21,49 @@ permissions:
   contents: write
 
 concurrency:
-  group: wheels
+  group: release
   cancel-in-progress: false
 
 jobs:
   plan:
     runs-on: ubuntu-latest
     outputs:
-      julia: ${{ steps.v.outputs.julia }}
-      version: ${{ steps.v.outputs.version }}
-      post: ${{ steps.v.outputs.post }}
-      skip: ${{ steps.v.outputs.skip }}
+      mode: ${{ steps.plan.outputs.mode }}
+      version: ${{ steps.plan.outputs.version }}
+      julia: ${{ steps.plan.outputs.julia }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # tags are needed to pick the next version
+          fetch-depth: 0 # tags are needed to find the previous release
 
-      - id: v
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - id: plan
         env:
-          POST_RELEASE: ${{ inputs.post_release && 'true' || 'false' }}
+          FORCE: ${{ inputs.force && 'true' || 'false' }}
+          BUMP: ${{ vars.RELEASE_BUMP || 'patch' }}
         run: |
-          julia=$(jq -r '.latest // empty' julia-list.json)
-          if [ -z "$julia" ]; then
-            echo "julia-list.json is empty; nothing to build."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          post=0
-          version="$julia"
-          if git rev-parse -q --verify "refs/tags/v$julia" > /dev/null; then
-            if [ "$POST_RELEASE" != "true" ]; then
-              echo "v$julia is already released; nothing new to build."
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            post=1
-            while git rev-parse -q --verify "refs/tags/v$julia.post$post" > /dev/null; do post=$((post + 1)); done
-            version="$julia.post$post"
-          fi
-          {
-            echo "skip=false"
-            echo "julia=$julia"
-            echo "post=$post"
-            echo "version=$version"
-          } >> "$GITHUB_OUTPUT"
-          echo "Will build and release $version"
+          args="--bump $BUMP"
+          if [ "$FORCE" = "true" ]; then args="$args --force"; fi
+          python tools/release.py plan $args | tee -a "$GITHUB_OUTPUT"
+
+  unit:
+    needs: plan
+    if: needs.plan.outputs.mode != 'skip'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pytest
+      - run: python -m pytest -q tests
 
   build:
-    needs: plan
-    if: needs.plan.outputs.skip != 'true'
+    needs: [plan, unit]
+    if: needs.plan.outputs.mode == 'prepare'
     strategy:
       fail-fast: true
       matrix:
@@ -87,8 +85,8 @@ jobs:
         shell: bash
         env:
           JULIA: ${{ needs.plan.outputs.julia }}
-          POST: ${{ needs.plan.outputs.post }}
-        run: python tools/build_wheel.py --platform "${{ matrix.platform }}" --version "$JULIA" --post "$POST" --out dist
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: python tools/build_wheel.py --platform "${{ matrix.platform }}" --version "$JULIA" --package-version "$VERSION" --out dist
 
       - name: Install and smoke-test
         shell: bash
@@ -109,33 +107,98 @@ jobs:
           path: dist/*.whl
           if-no-files-found: error
 
-  release:
+  # Everything is healthy: park the wheels in `__beta__`, bump the version and push the release commit.
+  prepare:
     needs: [plan, build]
+    if: needs.plan.outputs.mode == 'prepare'
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write # PyPI trusted publishing
+      actions: write # dispatch the release run
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.plan.outputs.version }}
+      JULIA: ${{ needs.plan.outputs.julia }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - uses: actions/download-artifact@v4
         with:
           pattern: wheel-*
           path: dist
           merge-multiple: true
 
-      - name: Create GitHub release
+      - name: Store the wheels in the __beta__ prerelease
+        run: |
+          if ! gh release view __beta__ > /dev/null 2>&1; then
+            gh release create __beta__ --prerelease --title "Beta wheels" \
+              --notes "Wheels waiting to be released. Managed by CI - do not edit by hand."
+          fi
+          gh release view __beta__ --json assets --jq '.assets[].name' | while read -r name; do
+            gh release delete-asset __beta__ "$name" --yes
+          done
+          gh release upload __beta__ dist/*.whl --clobber
+
+      - name: Bump version, changelog and README
+        run: python tools/release.py bump --version "$VERSION" --julia "$JULIA"
+
+      - name: Commit, push and start the release run
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml CHANGELOG.md README.md
+          git commit -m "chore(release): v$VERSION (Julia $JULIA)"
+          git pull --rebase origin "${{ github.ref_name }}"
+          git push origin "HEAD:${{ github.ref_name }}"
+          gh workflow run wheels.yml --ref "${{ github.ref_name }}"
+
+  # HEAD is the release commit made above: tag it and publish the wheels that were already tested.
+  release:
+    needs: [plan, unit]
+    if: needs.plan.outputs.mode == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # PyPI trusted publishing
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch the tested wheels from __beta__
+        run: |
+          gh release download __beta__ --pattern "julialang-$VERSION-*.whl" --dir dist
+          count=$(ls dist/*.whl | wc -l)
+          echo "found $count wheels:"
+          ls -l dist
+          [ "$count" -eq 5 ] # one per platform
+
+      - name: Release notes from CHANGELOG.md
+        run: python tools/release.py notes "$VERSION" > RELEASE_NOTES.md
+
+      - name: Create the release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.plan.outputs.version }}
           target_commitish: ${{ github.sha }}
           name: julialang ${{ needs.plan.outputs.version }}
-          body: |
-            Wheels bundling Julia ${{ needs.plan.outputs.julia }}.
-            `pip install julialang` (or download a wheel below), then run `julia`. Manage versions with `julialang`.
+          body_path: RELEASE_NOTES.md
           files: dist/*.whl
           make_latest: true
 
       # Needs trusted publishing configured on PyPI and a repository variable PUBLISH_PYPI=true.
-      # Julia wheels are > 100 MB, so the project's file size limit must be raised on PyPI first.
+      # The wheels are > 100 MB, so the project's file size limit must be raised on PyPI first.
       - name: Publish to PyPI
         if: ${{ vars.PUBLISH_PYPI == 'true' }}
         uses: pypa/gh-action-pypi-publish@release/v1

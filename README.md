@@ -1,13 +1,40 @@
+<div align="center">
+
 # julialang
 
-Julia in a wheel, in the spirit of [`ziglang`](https://pypi.org/project/ziglang/): `pip install julialang` gives you a
-working `julia` command, no installer, no `apt`, no access to julialang.org needed. A small manager command,
-`julialang`, can fetch other Julia versions and switch the default without reinstalling the package.
+**Julia in a wheel: `pip install julialang`, then run `julia`.**
+
+[![PyPI](https://img.shields.io/pypi/v/julialang.svg)](https://pypi.org/project/julialang/)
+[![Python](https://img.shields.io/pypi/pyversions/julialang.svg)](https://pypi.org/project/julialang/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+</div>
+
+---
+
+## Why julialang?
+
+Like [`ziglang`](https://pypi.org/project/ziglang/) does for Zig, `julialang` ships the official Julia binaries
+inside a Python wheel. No installer, no `apt`, and no access to julialang.org at install time, because the
+binaries are mirrored on GitHub by CI. A small manager command, `julialang`, can fetch other Julia versions and
+switch the default without reinstalling the package.
+
+<!-- release:start -->
+_No release yet._
+<!-- release:end -->
+
+## Installation
 
 ```bash
-pip install julialang
+pip install julialang          # or: pip install julialang --find-links https://github.com/mohammadraziei/julialang/releases/latest
 julia -e 'println("hello from Julia ", VERSION)'
+```
 
+Wheels: Linux x86_64 / aarch64 (glibc), macOS x86_64 / arm64, Windows x86_64. Python >= 3.9.
+
+## Managing versions
+
+```bash
 julialang                 # status: bundled / installed / default / latest
 julialang list            # installed versions and what the mirror offers
 julialang upgrade         # install the newest Julia and make it the default
@@ -25,43 +52,55 @@ default for one command. Installed versions live in `~/.julialang` (override wit
 
 ## How it works
 
+Two GitHub releases act as storage, and two workflows do the work:
+
+| Tag | Kind | Holds |
+| --- | --- | --- |
+| `__download__` | prerelease | mirrored Julia archives (`julia-<version>-<os>-<arch>.<ext>`) and `julia-list.json` |
+| `__beta__` | prerelease | the tested wheels of the release that is being prepared |
+| `v0.0.N` | release | the published wheels |
+
 ```
- julialang.org ──(weekly CI: update.yml)──▶ release "julia_binary"   julia-1.13.1-linux-x86_64.tar.gz, ...
-                                              + julia-list.json         (names, sizes, md5, sha256)
-                                              │ also committed to the repo
-                                              ▼ push / dispatch
-                                           wheels.yml ──▶ one wheel per platform ──▶ release vX.Y.Z (+ PyPI)
+julialang.org (crawled) ──▶ update.yml (weekly) ──▶ __download__ + julia-list.json pushed to master
+                                                           │ dispatch
+                                                           ▼
+                          wheels.yml, prepare:  tests → build + smoke-test 5 wheels → __beta__
+                                                → commit "chore(release): v0.0.N (Julia X.Y.Z)"
+                                                           │ dispatch
+                                                           ▼
+                          wheels.yml, release:  sees that commit message → tags v0.0.N, publishes the wheels
 ```
 
-* **`tools/sync.py`** reads the official `versions.json`, downloads every stable Julia (>= 1.10.0 by default) that is
-  not mirrored yet, checks the upstream sha256, records md5 + sha256, uploads the archive to the `julia_binary`
-  release and updates `julia-list.json`. Assets are named `julia-<version>-<os>-<arch>.<ext>`.
-* **`update.yml`** runs it weekly (Julia ships patch releases every month or two, so a weekly check is cheap and
-  exits at once when nothing is new), commits `julia-list.json` and starts `wheels.yml`.
-* **`wheels.yml`** builds a wheel for each platform with the newest Julia, installs it on a native runner and checks
-  `julia` reports the right version, then publishes a GitHub release `vX.Y.Z`. It skips if that tag already exists
-  (so backfilling old versions does not cut releases); run it manually with `post_release` for a `.postN` re-release
-  after a packaging fix.
-* **`tools/build_wheel.py`** repacks the archive under `julialang/_julia/`, preserving executable bits. Symlinks
-  cannot be stored in a wheel, so they go into `_symlinks.json` and are recreated on first run (if site-packages is
-  read-only, `julia` falls back to a private copy in `~/.julialang`).
+* **`tools/sync.py`** crawls <https://julialang.org/downloads/manual-downloads/> (current stable + LTS) and
+  <https://julialang.org/downloads/oldreleases/>, downloads every stable Julia >= 1.10.0 that is not mirrored yet,
+  verifies it against the upstream sha256 (and md5 when published), uploads it to `__download__` and records md5 +
+  sha256 in `julia-list.json`. `--source json` uses the official `versions.json` feed instead.
+* **`update.yml`** runs weekly (Julia ships a patch release every month or two, so this is cheap and exits at once
+  when nothing is new), commits `julia-list.json` and starts `wheels.yml`.
+* **`wheels.yml`** has two modes, picked from the last commit message by `tools/release.py`:
+  *prepare* (a new bundled Julia is available) runs the tests, builds one wheel per platform, installs each on a native
+  runner and checks `julia` reports the right version, stores the wheels in `__beta__`, then bumps the version,
+  updates `CHANGELOG.md` and the block at the top of this README and pushes a `chore(release): vX.Y.Z (Julia J)` commit;
+  *release* (that commit) tags `vX.Y.Z` and publishes the wheels from `__beta__`.
+* **`tools/build_wheel.py`** repacks the archive under `julialang/_julia/`, preserving executable bits. Symlinks cannot
+  be stored in a wheel, so they go into `_symlinks.json` and are recreated on first run (if site-packages is read-only,
+  `julia` falls back to a private copy in `~/.julialang`).
 
-Wheel platforms: Linux x86_64 / aarch64 (glibc), macOS x86_64 / arm64, Windows x86_64. The mirror also keeps
-Linux i686 and Windows i686 archives; musl, FreeBSD, ARMv7 and PowerPC are not mirrored (edit `MIRRORED` in
-`tools/sync.py` to change that).
+Versions are `0.0.N` for now (patch bumps) while the pipeline is proven. Set the repository variable
+`RELEASE_BUMP=minor` to switch to `0.N.0`. The wheel version is the package version; the bundled Julia is shown by
+`julialang status` and in the changelog.
 
 ## Setting it up
 
-1. Create the repo (this README assumes `mohammadraziei/julialang`; if you use another name, change `DEFAULT_REPO` in
-   `julialang/manager.py` and `tools/sync.py`, and the URLs in `pyproject.toml`) and push.
+1. Create the repo (default branch `master`; this README assumes `mohammadraziei/julialang`: for another name change
+   `DEFAULT_REPO` in `julialang/manager.py` and `tools/sync.py`, and the URLs in `pyproject.toml`) and push.
 2. Settings → Actions → General → Workflow permissions: **Read and write**.
 3. Run **Sync Julia binaries** once with `dry_run` to see the plan, then again for real. The first run mirrors every
-   version since 1.10 (a few GB per version across platforms; use the `limit` input to do it in slices). It then
-   starts **Build wheels** by itself.
-4. PyPI (optional): the wheels are about 150–250 MB, above PyPI's default 100 MB per-file limit, so ask PyPI support
-   for a size increase first. Then configure trusted publishing for this repo and workflow
-   (`wheels.yml`), and set the repository variable `PUBLISH_PYPI=true`. Without PyPI, install from the release:
-   `pip install julialang --find-links https://github.com/<owner>/julialang/releases/latest`.
+   version since 1.10 (a few GB per version across platforms; use the `limit` input to do it in slices). When it
+   finishes it starts **Test, build and release** by itself.
+4. PyPI (optional): the wheels are about 150-250 MB, above PyPI's default 100 MB per-file limit, so ask PyPI support
+   for a size increase first. Then configure trusted publishing for this repo and workflow (`wheels.yml`) and set the
+   repository variable `PUBLISH_PYPI=true`.
 
 ## Notes
 
@@ -69,5 +108,5 @@ Linux i686 and Windows i686 archives; musl, FreeBSD, ARMv7 and PowerPC are not m
   `share/julia/` and `share/licenses` inside the bundle). The code in this repository is MIT.
 * GitHub pauses scheduled workflows after 60 days without repository activity; if the weekly sync stops, re-enable it
   in the Actions tab.
-* Checksums: md5 is recorded because it is handy for quick comparisons, but verification uses both md5 and the
-  stronger sha256 from upstream.
+* md5 is recorded because it is handy for quick comparisons; verification uses the upstream sha256 (and the upstream
+  md5 when available).
