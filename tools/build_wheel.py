@@ -59,29 +59,32 @@ def _strip(name: str, top: str | None) -> str:
 
 
 def iter_archive(path: Path):
-    """Yield ("file", rel, mode, opener) / ("symlink", rel, target), top-level directory stripped."""
+    """Yield ("file", rel, mode, opener) / ("symlink", rel, target), top-level directory stripped.
+
+    The archive is closed when the generator is exhausted (Windows cannot delete an open file).
+    """
     if path.name.endswith(".zip"):
-        z = zipfile.ZipFile(path)
-        infos = z.infolist()
-        top = _top(i.filename for i in infos)
-        for i in infos:
-            rel = _strip(i.filename, top)
-            if i.is_dir() or not rel:
-                continue
-            mode = ((i.external_attr >> 16) & 0o777) or 0o644
-            yield "file", rel, mode, (lambda i=i: z.open(i))
+        with zipfile.ZipFile(path) as z:
+            infos = z.infolist()
+            top = _top(i.filename for i in infos)
+            for i in infos:
+                rel = _strip(i.filename, top)
+                if i.is_dir() or not rel:
+                    continue
+                mode = ((i.external_attr >> 16) & 0o777) or 0o644
+                yield "file", rel, mode, (lambda i=i: z.open(i))
     else:
-        t = tarfile.open(path)
-        members = t.getmembers()
-        top = _top(m.name for m in members)
-        for m in members:
-            rel = _strip(m.name, top)
-            if not rel:
-                continue
-            if m.issym():
-                yield "symlink", rel, m.linkname
-            elif m.isfile() or m.islnk():
-                yield "file", rel, m.mode & 0o777, (lambda m=m: t.extractfile(m))
+        with tarfile.open(path) as t:
+            members = t.getmembers()
+            top = _top(m.name for m in members)
+            for m in members:
+                rel = _strip(m.name, top)
+                if not rel:
+                    continue
+                if m.issym():
+                    yield "symlink", rel, m.linkname
+                elif m.isfile() or m.islnk():
+                    yield "file", rel, m.mode & 0o777, (lambda m=m: t.extractfile(m))
 
 
 def metadata_text(meta: dict, version: str, platform_key: str, readme: str) -> str:
@@ -129,7 +132,7 @@ def build(a) -> Path:
     wheel_path = out_dir / f"{name}-{version}-py3-none-{tag}.whl"
     readme = (ROOT / pyproject.get("readme", "README.md")).read_text(encoding="utf-8")
 
-    with tempfile.TemporaryDirectory() as td:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as td:
         if a.archive:
             archive = Path(a.archive)
         else:

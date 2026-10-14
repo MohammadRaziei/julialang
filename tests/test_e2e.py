@@ -157,3 +157,26 @@ def test_one_bad_file_does_not_stop_the_sync(tmp_path: Path):
     assert r.returncode == 1 and "FAILED julia-9.9.8-linux-x86_64.tar.gz" in r.stderr
     versions = json.loads(list_file.read_text())["versions"]
     assert "9.9.9" in versions and "9.9.8" not in versions  # the good one was still mirrored (and will be retried)
+
+
+def test_archive_is_closed_once_iteration_ends(tmp_path: Path):
+    """The last opener lambda keeps the archive object alive, so only an explicit close frees the file handle.
+    A leaked handle made Windows fail to delete the temp dir (PermissionError) during the wheel build."""
+    import zipfile as zf
+
+    sys.path.insert(0, str(ROOT / "tools"))
+    import build_wheel
+
+    tar = make_fake_julia(tmp_path, "9.9.9")
+    zip_path = tmp_path / "julia-9.9.9-win64.zip"
+    with zf.ZipFile(zip_path, "w") as z:
+        z.writestr("julia-9.9.9/bin/julia.exe", "x")
+    for archive in (tar, zip_path):
+        last_file = None
+        for item in build_wheel.iter_archive(archive):
+            if item[0] == "file":
+                last_file = item
+        assert last_file is not None
+        with pytest.raises((ValueError, OSError)):  # closed archive
+            with last_file[3]() as fh:
+                fh.read()
