@@ -1,17 +1,22 @@
 name: Sync Julia binaries
 
 # Crawls julialang.org, mirrors new Julia archives to the `__download__` prerelease and pushes julia-list.json.
-
-# Julia ships a patch release every month or two and a minor release about once a year, so a weekly check is
-# cheap (it exits immediately when nothing is new) and never leaves a release unmirrored for long.
-# Note: GitHub pauses scheduled workflows after 60 days without repository activity; re-enable them in the
-# Actions tab (or just run this workflow by hand) if that ever happens.
+#
+# Runs on every push to master, weekly, and by hand. Julia ships a patch release every month or two and a minor
+# release about once a year, so the weekly check is cheap: it exits at once when nothing is new.
+# GitHub pauses scheduled workflows after 60 days without repository activity; re-enable it in the Actions tab
+# (or run this workflow by hand) if that ever happens.
+#
+# Starting the next workflow (wheels.yml): a push made with the default GITHUB_TOKEN never triggers other
+# workflows, so
+#   * with the secret PUSH_TOKEN (a personal access token with contents + actions write) this job pushes with it,
+#     the push of julia-list.json triggers wheels.yml, and the "mirror" commit is skipped by this workflow below;
+#   * without it, this job falls back to dispatching wheels.yml explicitly.
 on:
   push:
     branches: [master]
-    paths: [".github/workflows/update.yml", "tools/sync.py"] # first push (empty list) and sync fixes run it at once
   schedule:
-    - cron: "17 4 * * 1"  # Mondays 04:17 UTC
+    - cron: "17 4 * * 1" # Mondays 04:17 UTC
   workflow_dispatch:
     inputs:
       min_version:
@@ -26,7 +31,7 @@ on:
         default: false
 
 permissions:
-  contents: write # create the julia_binary release, push julia-list.json
+  contents: write # create the __download__ release, push julia-list.json
   actions: write # dispatch the wheels workflow
 
 concurrency:
@@ -35,10 +40,17 @@ concurrency:
 
 jobs:
   sync:
+    # Do not react to the commits CI makes itself (that would loop).
+    if: >-
+      github.event_name != 'push' ||
+      (!startsWith(github.event.head_commit.message, 'chore: mirror Julia') &&
+       !startsWith(github.event.head_commit.message, 'chore(release):'))
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PUSH_TOKEN || github.token }}
 
       - uses: actions/setup-python@v5
         with:
@@ -73,10 +85,15 @@ jobs:
           git push origin "HEAD:${{ github.ref_name }}"
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      # Pushes made with GITHUB_TOKEN do not trigger other workflows (workflow_dispatch is the exception),
-      # so start the wheel build explicitly.
-      - name: Start the wheel build
+      # Only needed when the push above was made with GITHUB_TOKEN and therefore started nothing.
+      - name: Start the wheel build (no PUSH_TOKEN)
         if: ${{ always() && steps.commit.outputs.changed == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run wheels.yml --ref "${{ github.ref_name }}"
+          HAS_PUSH_TOKEN: ${{ secrets.PUSH_TOKEN != '' && 'true' || 'false' }}
+        run: |
+          if [ "$HAS_PUSH_TOKEN" = "true" ]; then
+            echo "Pushed with PUSH_TOKEN: the push itself starts wheels.yml."
+          else
+            gh workflow run wheels.yml --ref "${{ github.ref_name }}"
+          fi
