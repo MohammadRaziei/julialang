@@ -79,7 +79,7 @@ def http_get(url: str, retries: int = 4) -> bytes:
 
 
 def download(url: str, dest: Path, sha256: str, md5: str | None, retries: int = 3) -> tuple[str, str, int]:
-    """Download `url`, verify it against the upstream hashes, return (sha256, md5, size)."""
+    """Download `url`, require the upstream sha256 to match, return (sha256, md5, size)."""
     for i in range(retries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "julialang-mirror"})
@@ -93,7 +93,9 @@ def download(url: str, dest: Path, sha256: str, md5: str | None, retries: int = 
             if h_sha.hexdigest() != sha256.lower():
                 raise RuntimeError(f"sha256 mismatch for {url}: upstream {sha256}, got {h_sha.hexdigest()}")
             if md5 and h_md5.hexdigest() != md5.lower():
-                raise RuntimeError(f"md5 mismatch for {url}: upstream {md5}, got {h_md5.hexdigest()}")
+                # sha256 (checked above) is the authority; upstream's .md5 files are occasionally stale.
+                print(f"  warning: upstream md5 for {url} is {md5} but the file is {h_md5.hexdigest()}; "
+                      "sha256 matches, so the file is accepted", file=sys.stderr)
             return h_sha.hexdigest(), h_md5.hexdigest(), size
         except Exception as e:
             print(f"  attempt {i + 1}/{retries} failed: {e}", file=sys.stderr)
@@ -312,6 +314,7 @@ def main() -> int:
         a.keep_dir.mkdir(parents=True, exist_ok=True)
 
     changed = False
+    failures: list[str] = []
     try:
         with tempfile.TemporaryDirectory() as td:
             for ver, files in todo:
@@ -324,12 +327,18 @@ def main() -> int:
                     name = f"julia-{ver}-{key}.{f['ext']}"
                     path = Path(td) / name
                     print(f"[{ver}] {name}", flush=True)
-                    sha, md5, size = download(f["url"], path, f["sha256"], f.get("md5"))
-                    if a.upload:
-                        gh("release", "upload", TAG, str(path), "--clobber", "--repo", repo)
-                    if a.keep_dir:
-                        shutil.copy2(path, a.keep_dir / name)
-                    path.unlink()
+                    try:  # one bad file must not stop the rest; it is retried by the next run
+                        sha, md5, size = download(f["url"], path, f["sha256"], f.get("md5"))
+                        if a.upload:
+                            gh("release", "upload", TAG, str(path), "--clobber", "--repo", repo)
+                        if a.keep_dir:
+                            shutil.copy2(path, a.keep_dir / name)
+                    except Exception as e:
+                        print(f"  FAILED {name}: {e}", file=sys.stderr)
+                        failures.append(name)
+                        continue
+                    finally:
+                        path.unlink(missing_ok=True)
                     lst["versions"].setdefault(ver, {"files": {}})["files"][key] = {
                         "name": name,
                         "url": f"{base}/{name}",
@@ -346,6 +355,9 @@ def main() -> int:
             write_list(lst, a.list_file)
             if a.upload:
                 gh("release", "upload", TAG, str(a.list_file), "--clobber", "--repo", repo)
+    if failures:
+        print(f"{len(failures)} file(s) failed and will be retried next run: {', '.join(failures)}", file=sys.stderr)
+        return 1
     return 0
 
 

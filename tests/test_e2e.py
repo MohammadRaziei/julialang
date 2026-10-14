@@ -139,3 +139,21 @@ def test_full_pipeline(tmp_path: Path):
     run([bindir / "julialang", "remove", "9.9.10"], env=env)  # removing the default falls back to the bundled one
     assert "julia version 9.9.9" in run([bindir / "julia"], env=env)
     assert "9.9.10" in run([bindir / "julialang", "list"], env=env)  # still offered by the mirror
+
+
+def test_one_bad_file_does_not_stop_the_sync(tmp_path: Path):
+    good, bad = make_fake_julia(tmp_path, "9.9.9"), make_fake_julia(tmp_path, "9.9.8")
+    upstream = tmp_path / "versions.json"
+    write_upstream(upstream, {"9.9.9": good, "9.9.8": bad})
+    data = json.loads(upstream.read_text())
+    data["9.9.8"]["files"][0]["sha256"] = "0" * 64  # upstream hash does not match the file
+    upstream.write_text(json.dumps(data))
+    list_file = tmp_path / "julia-list.json"
+    r = subprocess.run(
+        [sys.executable, str(ROOT / "tools/sync.py"), "--source", "json", "--upstream", upstream.as_uri(),
+         "--list-file", str(list_file), "--repo", "me/julialang", "--min-version", "9.0.0"],
+        capture_output=True, text=True, env={**os.environ, "PYTHONPATH": ""},
+    )
+    assert r.returncode == 1 and "FAILED julia-9.9.8-linux-x86_64.tar.gz" in r.stderr
+    versions = json.loads(list_file.read_text())["versions"]
+    assert "9.9.9" in versions and "9.9.8" not in versions  # the good one was still mirrored (and will be retried)

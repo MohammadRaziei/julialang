@@ -157,3 +157,21 @@ def test_md5_sha_helper_agrees_with_hashlib(tmp_path: Path):
     from julialang import manager as M
 
     assert M.hash_file(f) == (hashlib.sha256(b"julia").hexdigest(), hashlib.md5(b"julia").hexdigest())
+
+
+def test_download_trusts_sha256_over_a_stale_md5(tmp_path: Path, capsys):
+    src = tmp_path / "f.bin"
+    src.write_bytes(b"julia")
+    sha = hashlib.sha256(b"julia").hexdigest()
+    sha_out, md5_out, size = sync.download(src.as_uri(), tmp_path / "out", sha, "0" * 32)
+    assert (sha_out, md5_out, size) == (sha, hashlib.md5(b"julia").hexdigest(), 5)  # our own md5 is recorded
+    assert "upstream md5" in capsys.readouterr().err
+    import pytest
+
+    monkey_sleep = sync.time.sleep
+    sync.time.sleep = lambda s: None
+    try:
+        with pytest.raises(RuntimeError, match="sha256 mismatch"):
+            sync.download(src.as_uri(), tmp_path / "out2", "f" * 64, None, retries=1)
+    finally:
+        sync.time.sleep = monkey_sleep
