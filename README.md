@@ -20,7 +20,9 @@ binaries are mirrored on GitHub by CI. A small manager command, `julialang`, can
 switch the default without reinstalling the package.
 
 <!-- release:start -->
-_No release yet._
+**Latest release:** [v0.0.1](https://github.com/MohammadRaziei/julialang/releases/tag/v0.0.1) · bundles Julia **1.13.1** · [changelog](CHANGELOG.md)
+
+Mirrored Julia versions: 1.13.1, 1.13.0, 1.12.7, 1.12.6, 1.12.5, 1.12.4, 1.12.3, 1.12.2, 1.12.1, 1.12.0 (+23 more) (33 in total)
 <!-- release:end -->
 
 ## Installation
