@@ -7,6 +7,9 @@ name: Sync Julia binaries
 # Note: GitHub pauses scheduled workflows after 60 days without repository activity; re-enable them in the
 # Actions tab (or just run this workflow by hand) if that ever happens.
 on:
+  push:
+    branches: [master]
+    paths: [".github/workflows/update.yml", "tools/sync.py"] # first push (empty list) and sync fixes run it at once
   schedule:
     - cron: "17 4 * * 1"  # Mondays 04:17 UTC
   workflow_dispatch:

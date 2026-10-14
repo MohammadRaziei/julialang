@@ -95,9 +95,10 @@ Versions are `0.0.N` for now (patch bumps) while the pipeline is proven. Set the
 1. Create the repo (default branch `master`; this README assumes `mohammadraziei/julialang`: for another name change
    `DEFAULT_REPO` in `julialang/manager.py` and `tools/sync.py`, and the URLs in `pyproject.toml`) and push.
 2. Settings → Actions → General → Workflow permissions: **Read and write**.
-3. Run **Sync Julia binaries** once with `dry_run` to see the plan, then again for real. The first run mirrors every
-   version since 1.10 (a few GB per version across platforms; use the `limit` input to do it in slices). When it
-   finishes it starts **Test, build and release** by itself.
+3. Pushing starts **Sync Julia binaries** by itself (it also runs weekly, and by hand from the Actions tab, where
+   `dry_run` shows the plan and `limit` mirrors in slices). An empty `julia-list.json` is simply filled from the site:
+   the first run mirrors every version since 1.10 (a few GB per version across platforms). When it finishes it starts
+   **Test, build and release** by itself.
 4. PyPI (optional): the wheels are about 150-250 MB, above PyPI's default 100 MB per-file limit, so ask PyPI support
    for a size increase first. Then configure trusted publishing for this repo and workflow (`wheels.yml`) and set the
    repository variable `PUBLISH_PYPI=true`.
