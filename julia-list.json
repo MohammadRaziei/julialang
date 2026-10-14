@@ -3,7 +3,7 @@
   "repo": "MohammadRaziei/julialang",
   "release_tag": "__download__",
   "latest": "1.13.1",
-  "updated": "2026-10-14T05:30:46Z",
+  "updated": "2026-10-14T07:28:43Z",
   "versions": {
     "1.13.1": {
       "files": {
@@ -278,6 +278,1479 @@
           "size": 304113251,
           "md5": "d67bc7eb2dea48a461fc4f1423640800",
           "sha256": "a602a2dfee931224fd68e47567dc672743e2fd9e80f39d84cf3c99afc9663ddd"
+        },
+        "linux-i686": {
+          "name": "julia-1.12.4-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.4-linux-i686.tar.gz",
+          "size": 225181804,
+          "md5": "a21444f292c2475851b92a6c3ba555bf",
+          "sha256": "fb7c91de825ecd6bc3d9960e9fc18c44052e82bcb4a5d2f626e6932de5f34968"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.12.4-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.4-linux-x86_64.tar.gz",
+          "size": 286118992,
+          "md5": "307a072a35c0bd3dcea4a8210f0d3690",
+          "sha256": "c57baf178fe140926acb1a25396d482f325af9d7908d9b066d2fbc0d6639985d"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.12.4-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.4-macos-aarch64.tar.gz",
+          "size": 229558850,
+          "md5": "06c412a6e4ec9c9b0ca8ad00e14e8e8a",
+          "sha256": "ea46b20deb5b4102e86f382f2d42313912421333eafa37cf057fdad28edd7e0f"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.12.4-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.4-macos-x86_64.tar.gz",
+          "size": 269039539,
+          "md5": "967c5b9e8526d551a563071606f39e0a",
+          "sha256": "2c34495ab302a0f2ba776a7323924f154608649a19d75e92d68505c5f04bf497"
+        },
+        "windows-i686": {
+          "name": "julia-1.12.4-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.4-windows-i686.zip",
+          "size": 262010497,
+          "md5": "6530df6705d4851e3ee5350c5e1d1795",
+          "sha256": "0247b3864ec28deb52847678572060c671bab21db4638db3ad9c0e6d8a088698"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.12.4-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.4-windows-x86_64.zip",
+          "size": 369022562,
+          "md5": "fdbc6eb3769d8413758a3374a6999194",
+          "sha256": "5c8e5bafead93a19bf56b1ce6d0684ab1ca3a57131019f73f320a9f114b81242"
+        }
+      }
+    },
+    "1.12.3": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.12.3-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.3-linux-aarch64.tar.gz",
+          "size": 304002021,
+          "md5": "d2340dcd7eb2f63a87d1e6c70acead4b",
+          "sha256": "32696125b996978a8ce0246176b1a46b08fb5013ab1a10dea5de2dcb0edfcc0c"
+        },
+        "linux-i686": {
+          "name": "julia-1.12.3-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.3-linux-i686.tar.gz",
+          "size": 225107286,
+          "md5": "f4a17d6db204d8b06dcec72ea49beddf",
+          "sha256": "a6cee7227953c723488918e0013d540bb63783c53b32da9c386bf0014c2a9237"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.12.3-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.3-linux-x86_64.tar.gz",
+          "size": 288292395,
+          "md5": "6b9ceaff0a1f04d2be10a80c69cec6fc",
+          "sha256": "8f7bd50f7472ae4eba8c5df6de31345d9ce2da17e22b94ffdfe603acaaf6b912"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.12.3-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.3-macos-aarch64.tar.gz",
+          "size": 229524477,
+          "md5": "01092f9365c431b2df070a63fd7a7121",
+          "sha256": "34ac6e8a1b44bfd684968fac561c887e7ea3a55fbc551b088071da7e47213bd6"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.12.3-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.3-macos-x86_64.tar.gz",
+          "size": 268948673,
+          "md5": "ecccb9017071aa6805b55430197c0b35",
+          "sha256": "f84aec0317c5d870fe322615885cf8decd7863d52848525daa2605bef1299eb3"
+        },
+        "windows-i686": {
+          "name": "julia-1.12.3-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.3-windows-i686.zip",
+          "size": 261824593,
+          "md5": "6dd39d9cd5de1d39d176db5f98d73f04",
+          "sha256": "25256fbfb702fccadb9ac417da4844670ee866af02124853efd0f8ded7adc49a"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.12.3-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.3-windows-x86_64.zip",
+          "size": 368931961,
+          "md5": "39a55e4257cf86022554645633d49df0",
+          "sha256": "c4e81409eb10179e4766ee94b66ab4fa2d6d2e2c00a7133518c866e74ae7c519"
+        }
+      }
+    },
+    "1.12.2": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.12.2-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.2-linux-aarch64.tar.gz",
+          "size": 303815680,
+          "md5": "13c8d543c0b196d4ae0c20f36dd72bed",
+          "sha256": "0383a2ce378b64356269f6f15e612f344523f507a9753f71a0b64ca02092445b"
+        },
+        "linux-i686": {
+          "name": "julia-1.12.2-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.2-linux-i686.tar.gz",
+          "size": 225109681,
+          "md5": "9d93f2848e9d03ed41ce91955f445d7d",
+          "sha256": "e7492e2454ecfd03f4da6fd30fb60391d184128bf683c96d1ea6f13cd35a20c8"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.12.2-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.2-linux-x86_64.tar.gz",
+          "size": 286364642,
+          "md5": "c9ade3d6e003551d57a3b5abeac96451",
+          "sha256": "a6d0c39ea57303ebcffa7a8d453429b86eb271e150c7cb0f5958fe65909b493a"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.12.2-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.2-macos-aarch64.tar.gz",
+          "size": 229686280,
+          "md5": "208765f6a3fec1945fa8ec2667884679",
+          "sha256": "08cdada747db752e0cd733eda3caba20136ef1729723e4065cec83d412d70d6e"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.12.2-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.2-macos-x86_64.tar.gz",
+          "size": 267885631,
+          "md5": "4a51dd762c30301bdb07d6efcbc8bcbc",
+          "sha256": "c4bf4dfb76cfb017311bfc22ada369d1cf27fc27cb32882358a758e190026a8b"
+        },
+        "windows-i686": {
+          "name": "julia-1.12.2-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.2-windows-i686.zip",
+          "size": 262007676,
+          "md5": "3393d5fc796b9d839efc420aabde919d",
+          "sha256": "e207ed10046b3cfd1abd2b2cb3c3db7194685ecfd137f7826dabfc29b66707db"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.12.2-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.2-windows-x86_64.zip",
+          "size": 367951051,
+          "md5": "70c46cc7828396b10c87269e41df6135",
+          "sha256": "d4f3404259e4f4f94cfe99dd3ead0a811a2a79bcec2e140f5c993c7b41c58ef2"
+        }
+      }
+    },
+    "1.12.1": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.12.1-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.1-linux-aarch64.tar.gz",
+          "size": 303079326,
+          "md5": "39beb981f3f8e0fbdf09a3e14f3c6581",
+          "sha256": "2e3d6ca07e251721fa3e0cd3460fc240e60f2a9bd97bae0ea2144f586da19297"
+        },
+        "linux-i686": {
+          "name": "julia-1.12.1-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.1-linux-i686.tar.gz",
+          "size": 224967433,
+          "md5": "a1147ab4cd4b48e52ecc07010a0677ab",
+          "sha256": "99596fe3f139f52042cb5167034d26823f802dfe3d1333127e504109c03f0807"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.12.1-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.1-linux-x86_64.tar.gz",
+          "size": 285774589,
+          "md5": "14afe6b370eaffe69d869e200abee349",
+          "sha256": "7d2add9ee74ee2f12b5c268bc194794cc52ea440f8687fbab29db6afefbf69b7"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.12.1-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.1-macos-aarch64.tar.gz",
+          "size": 229481706,
+          "md5": "26c993988d62b50c5e9b7689389c8811",
+          "sha256": "cc65620b71a725380e59d0e31dc0b4140f30229b70a4b8eec8e32c222bc54fc1"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.12.1-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.1-macos-x86_64.tar.gz",
+          "size": 268210592,
+          "md5": "09eb0507123ec0a49f9708556352bea0",
+          "sha256": "7dd841cd853ad64f5e90a4b459631b49ee388891ceaba81857f5b8959392c4b2"
+        },
+        "windows-i686": {
+          "name": "julia-1.12.1-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.1-windows-i686.zip",
+          "size": 261154555,
+          "md5": "b9fb7348a7b775a98a8f9b84b8138e53",
+          "sha256": "fba59983436e1bc742c2650a0b737ca816457bd46ce78a5fb69fc50ca08e07e2"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.12.1-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.1-windows-x86_64.zip",
+          "size": 366825212,
+          "md5": "cb3cde8556280ad99a5c0b00347b146a",
+          "sha256": "bf17422eb9e9a3db16910247cc892f19047e874216f5922fc2d5de4acdb17f02"
+        }
+      }
+    },
+    "1.12.0": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.12.0-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.0-linux-aarch64.tar.gz",
+          "size": 298607681,
+          "md5": "08af5532699cc24fe9638aac80f1dd62",
+          "sha256": "0fb44de10c3a9da719b4962c2158fe4484d98377e521318b692e91a1bea5716b"
+        },
+        "linux-i686": {
+          "name": "julia-1.12.0-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.0-linux-i686.tar.gz",
+          "size": 223727617,
+          "md5": "60347b2b70dcf728f2ff56f5e8c54773",
+          "sha256": "bef313ad70b3b3131a879118a388a878cb6e0aceab018f8dbf01de247d31f705"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.12.0-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.0-linux-x86_64.tar.gz",
+          "size": 281941446,
+          "md5": "0cfa46afccdc6e0e711317e1abbf1aef",
+          "sha256": "6f87b8fcf5ef6a7371e8c79d948aedfa0ba28ce44447c446d7d82e70f0158da8"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.12.0-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.0-macos-aarch64.tar.gz",
+          "size": 226997357,
+          "md5": "97b0aae9340dd4aadaf4f49c8142040e",
+          "sha256": "d1aaa44a9507c7eaa500d41460f06694bffd0ca366dbc23b38c09bb3290f52c8"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.12.0-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.0-macos-x86_64.tar.gz",
+          "size": 264145828,
+          "md5": "5b0329904f8b473f8d441a9f32f9e359",
+          "sha256": "373abf275872269f2ca97452e583a4aaf565e6f0572f7072b189aa3dc1b29429"
+        },
+        "windows-i686": {
+          "name": "julia-1.12.0-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.0-windows-i686.zip",
+          "size": 215148699,
+          "md5": "0e9160d88c2702065380c5402e05e96b",
+          "sha256": "3c9a0da0bcb5d265f962cf5ca01a3bbb2ea51eff6d8d9e466ac415a2e660d8a4"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.12.0-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.12.0-windows-x86_64.zip",
+          "size": 283898093,
+          "md5": "de01301c10d8b1c409b4294534cf5cce",
+          "sha256": "bc196d2b39d672ce139d6f7a67108773c18db069a05d9311852f9fa04192e421"
+        }
+      }
+    },
+    "1.11.9": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.11.9-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.9-linux-aarch64.tar.gz",
+          "size": 299101384,
+          "md5": "7c160a99de1de321b51b58879e462002",
+          "sha256": "a2071f0654d1d6af4381cba650b9f790f5f8bb7a570e51e378de8bcf67ff623e"
+        },
+        "linux-i686": {
+          "name": "julia-1.11.9-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.9-linux-i686.tar.gz",
+          "size": 232621351,
+          "md5": "4e45ce10c374fe3185ab1586744dbfd6",
+          "sha256": "74df5031a93bce45e30582a71bf70f4ba983ff42f6eaf54eb9effb6e124604ca"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.11.9-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.9-linux-x86_64.tar.gz",
+          "size": 286513988,
+          "md5": "cd5153f995dcccf7eaa7f6c764b355b9",
+          "sha256": "b36363356d7a05eaf8b7b9e7a91c710f6bd3d2940be4d4e6d14b9a9f2927de35"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.11.9-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.9-macos-aarch64.tar.gz",
+          "size": 234564984,
+          "md5": "e5f7431ce0a0102fa99d9b54515188ad",
+          "sha256": "ed903d0d337036fc3a68414bfca5f73107af162678ef76b52e42e84e25f33bd7"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.11.9-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.9-macos-x86_64.tar.gz",
+          "size": 267148362,
+          "md5": "a02c8a6774641833f232262814af0140",
+          "sha256": "f7b49c3ddb22389dfab2c1d8d26fa4bef540ee8195650d8c502daa9c1c2edf92"
+        },
+        "windows-i686": {
+          "name": "julia-1.11.9-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.9-windows-i686.zip",
+          "size": 215354619,
+          "md5": "f44bb2f0bd9793aa1e804af196596884",
+          "sha256": "b7d835c1f01808e7738b835770a64c681824111d3f1684a109f37ed4a275f0e6"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.11.9-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.9-windows-x86_64.zip",
+          "size": 274548649,
+          "md5": "d5bb4f1c8a413038489d3cc507878ee7",
+          "sha256": "1ae5f16cb10cf23089e002626304c467a8d14ba750a7e02dff32df7cdec85074"
+        }
+      }
+    },
+    "1.11.8": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.11.8-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.8-linux-aarch64.tar.gz",
+          "size": 299160180,
+          "md5": "ade12e607c42cedfd29d77502e66bd72",
+          "sha256": "54c8f866e1317fa249df47bde535fb4dda7c620863e8f877a1c91d6ed241f11a"
+        },
+        "linux-i686": {
+          "name": "julia-1.11.8-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.8-linux-i686.tar.gz",
+          "size": 232684959,
+          "md5": "6d2ab0efc5853801c7b766bd173b271b",
+          "sha256": "3b461b7260fa8c671a5cf673e6efcdadc00d7220b1c21c98e376542545e01c37"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.11.8-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.8-linux-x86_64.tar.gz",
+          "size": 286347425,
+          "md5": "8e75fb51a5f5d90df4eb097c2323af2b",
+          "sha256": "26ad9031b0c9857cde8c89aced86990d1842a551940bfb275e8372108e57cc50"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.11.8-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.8-macos-aarch64.tar.gz",
+          "size": 234548890,
+          "md5": "5590417ee0b7fe07782de077959e2276",
+          "sha256": "c54daf1eea4c66d831d29ff0c40d629891474bc57391db3b3a2e56d06390bc38"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.11.8-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.8-macos-x86_64.tar.gz",
+          "size": 266236390,
+          "md5": "d62a873b2db5c2cc7de3778144b5501a",
+          "sha256": "b54fd6e6d06fc8ae138dbd556d34d6bf89d91025b725349ab88c83bf958f8557"
+        },
+        "windows-i686": {
+          "name": "julia-1.11.8-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.8-windows-i686.zip",
+          "size": 215435724,
+          "md5": "5776f28d39acda9673fb5efc9f025d0a",
+          "sha256": "f51d4031e201483e7fa7caac4aeafadb7c04a90e1b59a355e7a0d5a228f8910a"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.11.8-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.8-windows-x86_64.zip",
+          "size": 274679638,
+          "md5": "91557320b596b1a05bae90218ffb9781",
+          "sha256": "61325a76a24307877e0c55c54ed2d101961f3729882848be991a258b5b371536"
+        }
+      }
+    },
+    "1.11.7": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.11.7-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.7-linux-aarch64.tar.gz",
+          "size": 299168427,
+          "md5": "690df9e3955475dfdf906676bd33fd5a",
+          "sha256": "f97f80b35c12bdaf40c26f6c55dbb7617441e49c9e6b842f65e8410a388ca6f4"
+        },
+        "linux-i686": {
+          "name": "julia-1.11.7-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.7-linux-i686.tar.gz",
+          "size": 232508191,
+          "md5": "2cc073d522404351e99ccd0dc9f0d413",
+          "sha256": "b0697a58805165a767d875130e3a79f38b5aee9e5080ae95afc67548f3956f32"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.11.7-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.7-linux-x86_64.tar.gz",
+          "size": 286235430,
+          "md5": "d72f6585f46b111af52108df74270351",
+          "sha256": "aa5924114ecb89fd341e59aa898cd1882b3cb622ca4972582c1518eff5f68c05"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.11.7-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.7-macos-aarch64.tar.gz",
+          "size": 234579721,
+          "md5": "c4692836ff1efe3cf6e8132db10ed916",
+          "sha256": "74df9d4755a7740d141b04524a631e2485da9d65065d934e024232f7ba0790b6"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.11.7-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.7-macos-x86_64.tar.gz",
+          "size": 266900442,
+          "md5": "7cbb10d13652d487131be8fbae8e5f60",
+          "sha256": "b2c11315df39da478ab0fa77fb228f3fd818f1eaf42dc5cc1223c703f7122fe5"
+        },
+        "windows-i686": {
+          "name": "julia-1.11.7-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.7-windows-i686.zip",
+          "size": 215338257,
+          "md5": "016cf903131ad41de13b0a1205cd7647",
+          "sha256": "992526473b6382315728254595db91afdb7283a2c31cdfdc2576a4cc37e997aa"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.11.7-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.7-windows-x86_64.zip",
+          "size": 274560598,
+          "md5": "1c072c84c640f545d79d3c9ce38c3b9d",
+          "sha256": "3ff4a717de380de368f0c75e3e11880220b8d2dde689a0f76c40c2ccd70579db"
+        }
+      }
+    },
+    "1.11.6": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.11.6-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.6-linux-aarch64.tar.gz",
+          "size": 299362948,
+          "md5": "4ca640c7c76382fc503a15ae7eff20a0",
+          "sha256": "c2c5cdce017cacadaccb7d22aa070f549e4e87c4bb10f15853170ddcb50bf5f4"
+        },
+        "linux-i686": {
+          "name": "julia-1.11.6-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.6-linux-i686.tar.gz",
+          "size": 232637970,
+          "md5": "90931ba0dc52fa3ac1e1f6c446828518",
+          "sha256": "910fa8fd8a2e7dbf44b96ac3207e2b50744661215d10d4828f9df1bb5606d69c"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.11.6-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.6-linux-x86_64.tar.gz",
+          "size": 286557288,
+          "md5": "c60340ff2ab5ecd217c9dab9f3e7dc84",
+          "sha256": "e99e52e2029d845097c68f2372d836186f0eb3fb897a9dde0bdf9ee9250d03d5"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.11.6-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.6-macos-aarch64.tar.gz",
+          "size": 234628386,
+          "md5": "ab3ba615eb75075681b2911411217e61",
+          "sha256": "01caaa9c25fa1f071003807c8a6739de4941b5ec13751131128e00e21880e639"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.11.6-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.6-macos-x86_64.tar.gz",
+          "size": 266952455,
+          "md5": "618803673b094204cc21ea3856e1ec1e",
+          "sha256": "195a897e031595f59821dbcaf87514faa8d64220334b285c3e9809fce4958f79"
+        },
+        "windows-i686": {
+          "name": "julia-1.11.6-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.6-windows-i686.zip",
+          "size": 215129434,
+          "md5": "def8b19d8096bec58885a6ac5d4de4d2",
+          "sha256": "d0d7819d6479350f4890652bfe01b262ecc28ab1f6c387d40243a05ce14479f1"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.11.6-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.6-windows-x86_64.zip",
+          "size": 274563178,
+          "md5": "b19321792b8c82c261127d981df44136",
+          "sha256": "7441e1cb56cd3df4d2a9969d3f9b324148fbc2ae3f39625f02f3dd8db964da17"
+        }
+      }
+    },
+    "1.11.5": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.11.5-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.5-linux-aarch64.tar.gz",
+          "size": 298755650,
+          "md5": "4f34b7019c472c1a0197a6ef7faaea7d",
+          "sha256": "f63203574fba25c9bda5e98b2f87f985d4672109855633a46bae32bfba3cbc0d"
+        },
+        "linux-i686": {
+          "name": "julia-1.11.5-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.5-linux-i686.tar.gz",
+          "size": 232196516,
+          "md5": "508e89833fe37fd68b6ca46acde5fa7c",
+          "sha256": "c2b6f5763edd994cb01407b8e71797bd25901cc513132d155953742f54b3a294"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.11.5-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.5-linux-x86_64.tar.gz",
+          "size": 285759766,
+          "md5": "8db96bfa2c3c5a9b5c715ff64ed8d8fe",
+          "sha256": "723e878c642220cc0251a0e13758c059a389cadc7f01376feaf1ea7388fe8f9c"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.11.5-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.5-macos-aarch64.tar.gz",
+          "size": 233652547,
+          "md5": "eaf9ed19665440414fe4eee2d6374317",
+          "sha256": "2c279005f5059d10eade27a59e25f5ea53e00b0caa30a6d73fa32529ec046735"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.11.5-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.5-macos-x86_64.tar.gz",
+          "size": 265300081,
+          "md5": "97126e7ba68585d6b6c2a18d4bcd6c2e",
+          "sha256": "9bee8cc79a7dda56a38bbef88e72687ea0cb35d4c382eb9076ee8a3c53c3a8cf"
+        },
+        "windows-i686": {
+          "name": "julia-1.11.5-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.5-windows-i686.zip",
+          "size": 214780446,
+          "md5": "a64ef99b2a7b43c8281e1d9de8a58f79",
+          "sha256": "d164da402271b1a0e8e9457639ea63ec396c79dab8833d1797199f0c7c767520"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.11.5-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.5-windows-x86_64.zip",
+          "size": 274156918,
+          "md5": "b39a1766b39f44e4e1eb3730d8d26bfd",
+          "sha256": "580ecaf458e273568bdd6ebcb7126392cd1e71f9b9500e0156769334774c595b"
+        }
+      }
+    },
+    "1.11.4": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.11.4-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.4-linux-aarch64.tar.gz",
+          "size": 279168423,
+          "md5": "8bb79c94258ad180feb2a8278100d9fb",
+          "sha256": "859f1a8cc4bce6911bc912f0e226a6ba2b1c144110b9d559d88f5077513d0e37"
+        },
+        "linux-i686": {
+          "name": "julia-1.11.4-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.4-linux-i686.tar.gz",
+          "size": 213115276,
+          "md5": "79cbe4dbdbdcc2d874c7b5850d4668e0",
+          "sha256": "0da3178ee5dacc1473e45c8c74838455252831f5d37483d716995742d3187e30"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.11.4-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.4-linux-x86_64.tar.gz",
+          "size": 266267808,
+          "md5": "00dd4fb3a6caf69b7421119288093b75",
+          "sha256": "fb3d3c5fccef82158a70677c0044ac5ae40410eceb0604cdc8e643eeff21df8d"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.11.4-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.4-macos-aarch64.tar.gz",
+          "size": 213988775,
+          "md5": "74e3af5139e0e57784d11b6e0afbf008",
+          "sha256": "5adfb4482bba9610405c0f9b5a3c1aa09cabf70c8751d75970f2dab0fa819488"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.11.4-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.4-macos-x86_64.tar.gz",
+          "size": 245131245,
+          "md5": "7d2346d7d86053e82a1d0c0b26b24946",
+          "sha256": "7e693914399f2ebe1fafe5c670af0373474145cfe2bfda661f370559a680720a"
+        },
+        "windows-i686": {
+          "name": "julia-1.11.4-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.4-windows-i686.zip",
+          "size": 196166453,
+          "md5": "0bee5806e46babc4580ebbae77bb30f3",
+          "sha256": "7c9771d4129eecdda7ffe4c5c2a6f47777efb97210c195e96fbaf50f701e4acc"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.11.4-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.4-windows-x86_64.zip",
+          "size": 254842697,
+          "md5": "a62176ea09c92aa784b178e7b15a496a",
+          "sha256": "81a5d228a1fd27b70fb3015291920754f02d93fdd9248897961ae18deefaff55"
+        }
+      }
+    },
+    "1.11.3": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.11.3-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.3-linux-aarch64.tar.gz",
+          "size": 279091479,
+          "md5": "fdabffe2def4dd4f747bd00d72fa0cb9",
+          "sha256": "0c1f2f60c3ecc37ae0c559db325dc64858fb11d6729b25d63f23e5285f7906ef"
+        },
+        "linux-i686": {
+          "name": "julia-1.11.3-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.3-linux-i686.tar.gz",
+          "size": 213219637,
+          "md5": "ed36c1081295b737034084d5490c5d64",
+          "sha256": "9001cbd4a077fad3030929eb18b4ff256067fe5bc8782f7e2d7b75e9dde56f27"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.11.3-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.3-linux-x86_64.tar.gz",
+          "size": 266111465,
+          "md5": "0edce7cd18a32cab28c37dbf79d55fbb",
+          "sha256": "7d48da416c8cb45582a1285d60127ee31ef7092ded3ec594a9f2cf58431c07fd"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.11.3-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.3-macos-aarch64.tar.gz",
+          "size": 213835057,
+          "md5": "39d440d54e78b694554cd59355f62223",
+          "sha256": "554fb0ddb4d94d623c83ca5e9d309fe1a7a0924445cb18ec3b863fb3367b0ba8"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.11.3-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.3-macos-x86_64.tar.gz",
+          "size": 245202611,
+          "md5": "c02da3702b2c0e377e7edcdfa67707d4",
+          "sha256": "5220aade1b43db722fb4e287f1c5d25aa492267b86a846db1546504836cca1be"
+        },
+        "windows-i686": {
+          "name": "julia-1.11.3-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.3-windows-i686.zip",
+          "size": 196061213,
+          "md5": "d01a1f456a6fb300b040befa8790ef59",
+          "sha256": "468fe30cd73b3204f8e81997c9c47685e49b30eabbaaf25f4d1e3d0588c5b5c1"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.11.3-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.3-windows-x86_64.zip",
+          "size": 254584123,
+          "md5": "e2e98b6d99f6048a54e17d6d95b468e9",
+          "sha256": "dc15c611c6bdca2ffe3ee40c70f29a28cc6de18cd00b26f4a3d0f5dc1997152c"
+        }
+      }
+    },
+    "1.11.2": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.11.2-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.2-linux-aarch64.tar.gz",
+          "size": 298466945,
+          "md5": "267a13f4fcdc05dcfee98d31c8eba873",
+          "sha256": "0346e6d65852a3b73ced2c80c40f5a8cf38e7048d001cd57d3d1dd9efb2f6641"
+        },
+        "linux-i686": {
+          "name": "julia-1.11.2-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.2-linux-i686.tar.gz",
+          "size": 232131862,
+          "md5": "bb690bc1a25174c97572ffd9479aa877",
+          "sha256": "a0b6e1e3a017c3db142f4c928006617870389d5f67c43adc4d0681b3bcd6c528"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.11.2-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.2-linux-x86_64.tar.gz",
+          "size": 285843560,
+          "md5": "48adfeee5c60c50a70594163b1363b6d",
+          "sha256": "8a372ad262d4d4d55a1044f4fe3bce7c9a4a3ce8c513d2470e58e8071eecd476"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.11.2-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.2-macos-aarch64.tar.gz",
+          "size": 233420707,
+          "md5": "8074a5ab9f220ec1069fb400208128f9",
+          "sha256": "bcfe9c788f3dcf613a4753a4d9771d8381d00caf0e8af64d8aa87af10068b754"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.11.2-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.2-macos-x86_64.tar.gz",
+          "size": 266230627,
+          "md5": "d754a28bc26fd3667a1a8e0a7749b7e4",
+          "sha256": "0b52ba3d7f283e43ba853bc3d0f401decf993d8d53da752bd644a9f934679184"
+        },
+        "windows-i686": {
+          "name": "julia-1.11.2-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.2-windows-i686.zip",
+          "size": 214469620,
+          "md5": "f893b0f86b56d11037ec08eeded05dec",
+          "sha256": "5bae48493a4e7fc5c4302d2be89b5a6a0a10ca625a756f3601b1426be88fefd2"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.11.2-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.2-windows-x86_64.zip",
+          "size": 273173858,
+          "md5": "d195dd0c6c582bcab3b76fbb6c256f6b",
+          "sha256": "c35b1980f97553825ba9df254ed9deb4e34c34c47cd7636cc1a816cd5bacc9f4"
+        }
+      }
+    },
+    "1.11.1": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.11.1-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.1-linux-aarch64.tar.gz",
+          "size": 249937177,
+          "md5": "cba08e902b13f401c1b4f811d8d0c931",
+          "sha256": "bd623ef3801c5a56103464d349c7901d5cc034405ad289332c67f1e8ecc05840"
+        },
+        "linux-i686": {
+          "name": "julia-1.11.1-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.1-linux-i686.tar.gz",
+          "size": 229649250,
+          "md5": "74473366c3db70d8c5ce8a911b327a82",
+          "sha256": "332491f18bb7463635a6f1b2d496b85ff04c5575b6918e02099d5c8ede80546d"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.11.1-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.1-linux-x86_64.tar.gz",
+          "size": 254553793,
+          "md5": "c4138b45e75e1cdc3172518e92921234",
+          "sha256": "cca8d13dc4507e4f62a129322293313ee574f300d4df9e7db30b7b41c5f8a8f3"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.11.1-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.1-macos-aarch64.tar.gz",
+          "size": 213543373,
+          "md5": "82b4ec83412317e38c916757695b34c5",
+          "sha256": "e09d13e1c6c98452e91e698220688dd784ec8e5367e9e6443099c5f9aa2add78"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.11.1-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.1-macos-x86_64.tar.gz",
+          "size": 225499640,
+          "md5": "7b4fc755c27142116e085bbefe646fa8",
+          "sha256": "59885de9310788c1ed12f41e7d2c2f05eabd314888cd105d299837b76a4a7240"
+        },
+        "windows-i686": {
+          "name": "julia-1.11.1-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.1-windows-i686.zip",
+          "size": 212039001,
+          "md5": "d3469cc159ddfc0ee9a8b10231b1402d",
+          "sha256": "12f52cbc23f182b24282cfaef91a56782197e6b7eafa8fc50c8c99c8b3b4629a"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.11.1-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.1-windows-x86_64.zip",
+          "size": 243182732,
+          "md5": "67ec1605e1933aa205db116ea378220d",
+          "sha256": "67cb710c089eaf14096158cd78f3ff00167c8b7be128b9e08536c82e4907c7fd"
+        }
+      }
+    },
+    "1.11.0": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.11.0-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.0-linux-aarch64.tar.gz",
+          "size": 249417836,
+          "md5": "af9bb77b186fa57b67ecf4a945ef202a",
+          "sha256": "66b9195b4c6b85403834dca9ef4fcae75f15be906bb3bb2c48eccb780ab810a1"
+        },
+        "linux-i686": {
+          "name": "julia-1.11.0-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.0-linux-i686.tar.gz",
+          "size": 229438005,
+          "md5": "b49fa84ecb43941125a092604165c16d",
+          "sha256": "b4088274ca31ed3c58fa6f4d0f3887b0610ea38e1aa87000993cb24900c773aa"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.11.0-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.0-linux-x86_64.tar.gz",
+          "size": 254121552,
+          "md5": "c8c3d5d7fee39c9ed7bf318e46c09997",
+          "sha256": "bcf815553fda2ed7910524c8caa189c8e8191a40a799dd8b5fbed0d9dd6b882c"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.11.0-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.0-macos-aarch64.tar.gz",
+          "size": 213723650,
+          "md5": "25ae27a1d27e82c1b9f0b7605ebddbcc",
+          "sha256": "c25ae0c87a418555e40167e07524824659656cb60bac9d1e4a5d50d887abe560"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.11.0-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.0-macos-x86_64.tar.gz",
+          "size": 224453571,
+          "md5": "9cbc8cf102f0bee4821819f7cbfbe09f",
+          "sha256": "e001d80b53cb9637402633f6cf50cbf2d83d4de03c4093783b8878265996e33d"
+        },
+        "windows-i686": {
+          "name": "julia-1.11.0-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.0-windows-i686.zip",
+          "size": 212106309,
+          "md5": "63f88444f3211dafb397a3d2c9e10f2f",
+          "sha256": "3f040aa48e3b475b2263650cc08d714f7fdc003307ee451308745274ace2fcc3"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.11.0-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.11.0-windows-x86_64.zip",
+          "size": 242976008,
+          "md5": "afbbf38ea256dc57e87ec3c217818fc6",
+          "sha256": "5aff4a34dc1ea8ea18081fc119cd440b95a7ee8ae3d8b64cf0e0c454a5c0b754"
+        }
+      }
+    },
+    "1.10.12": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.12-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.12-linux-aarch64.tar.gz",
+          "size": 174922360,
+          "md5": "d7f7901ab15fbc33f2ad7939c626ff32",
+          "sha256": "cc257b21967049642bfe17de1aff7dae17477eba4f423f98cb400c002080e5a2"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.12-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.12-linux-i686.tar.gz",
+          "size": 154557269,
+          "md5": "1e40903972764ee032a848fe57865a39",
+          "sha256": "453d80cf0ce6f21041ff16d677e702c85557f28f078e8a91dd01582edb57708c"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.12-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.12-linux-x86_64.tar.gz",
+          "size": 175321447,
+          "md5": "a18d306672a0659ef4a909f80d647359",
+          "sha256": "b0c50dfe349d76ffc8580d24e0c0be623988a6d91ed57ad8b73c0137fd27bc0d"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.12-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.12-macos-aarch64.tar.gz",
+          "size": 130046882,
+          "md5": "b9332a18729de1498e65708fd1e284b0",
+          "sha256": "53b12aee2a20d56d498589d21ab7f5f848bda0bbd75afdc5d94fe8876dab783f"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.12-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.12-macos-x86_64.tar.gz",
+          "size": 152791617,
+          "md5": "553a42140677bad79069520ee11b3927",
+          "sha256": "5af0ae55525323db4d9e26706dd3bd39d60ae6f8d0e88481223155c78b4ec118"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.12-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.12-windows-i686.zip",
+          "size": 152928359,
+          "md5": "91d6b0b5ed403cdecef077f9ad927897",
+          "sha256": "c9b81cc9ea6cd0785fa6c1d37a9949ec26439bcb3aa5a8ddb2b84cad000bcf59"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.12-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.12-windows-x86_64.zip",
+          "size": 183434216,
+          "md5": "94655fb8cd988d78f9b9c52afb7dadd7",
+          "sha256": "88177b1089a01f5254454ecbda888542d6038aba4d017a4bf8bc860322d7f9de"
+        }
+      }
+    },
+    "1.10.11": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.11-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.11-linux-aarch64.tar.gz",
+          "size": 175755155,
+          "md5": "7525fef28e57ac658ae3f1e8cb797d40",
+          "sha256": "3004a980420e5f3a08847f44db9699105d9febc519205af52764fc97eb12c6b2"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.11-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.11-linux-i686.tar.gz",
+          "size": 154661480,
+          "md5": "14cb2c2e6c30e3fb1fbb6c467b721f06",
+          "sha256": "8cf274a08194803e2b0bb5f406e143acd535284efee750fe5b7316883bd12ec9"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.11-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.11-linux-x86_64.tar.gz",
+          "size": 175455206,
+          "md5": "1d807b525d37709894e7016301392d5d",
+          "sha256": "fb49c6b174600cd2051e37ba3f7330f8acf06dd00bce609bab6611387fdb37bf"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.11-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.11-macos-aarch64.tar.gz",
+          "size": 129930101,
+          "md5": "442427c2d059cf37f5a5cc94e9ef7611",
+          "sha256": "bd5706c10dceffeebe56d2d3f371e3d8d4b27195cad7489f22f6292af907f05b"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.11-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.11-macos-x86_64.tar.gz",
+          "size": 152290621,
+          "md5": "ab5840f98e3393f352fc666ab5710320",
+          "sha256": "bdc6f52ee4fdcf13f0d0e2480733742b7eefb7fbfc66c518daca6e19e804f34b"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.11-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.11-windows-i686.zip",
+          "size": 150231354,
+          "md5": "a0ca1ea03d911c295d4e3ff388f5339a",
+          "sha256": "13a82256a98eed2d30346d8434a222755f9ac47f89ab17b57b1c47a567a2855e"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.11-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.11-windows-x86_64.zip",
+          "size": 181015193,
+          "md5": "9a85854987348750d95c0efa658e8f5c",
+          "sha256": "11ba52fd1384f82d09ea232eb1552b6694bb2083e6adfe3ae2f9e1e663ed8cf8"
+        }
+      }
+    },
+    "1.10.10": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.10-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.10-linux-aarch64.tar.gz",
+          "size": 173582130,
+          "md5": "dfd49f0806032d8c384065fc5007747d",
+          "sha256": "a4b157ed68da10471ea86acc05a0ab61c1a6931ee592a9b236be227d72da50ff"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.10-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.10-linux-i686.tar.gz",
+          "size": 154176113,
+          "md5": "92c82e9913fbb66a6adf08753d272294",
+          "sha256": "32186f38e7f6c7830375da1d1327bec3b187d93e3f0ff007829f20f578fd8c35"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.10-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.10-linux-x86_64.tar.gz",
+          "size": 173848413,
+          "md5": "cdfcabb03bd8a09684b602aa25735371",
+          "sha256": "6a78a03a71c7ab792e8673dc5cedb918e037f081ceb58b50971dfb7c64c5bf81"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.10-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.10-macos-aarch64.tar.gz",
+          "size": 135953938,
+          "md5": "49ef99210007ba0b4064936bfdf6870b",
+          "sha256": "52d3f82c50d9402e42298b52edc3d36e0f73e59f81fc8609d22fa094fbad18be"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.10-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.10-macos-x86_64.tar.gz",
+          "size": 151175774,
+          "md5": "2c9c8c70bcb21478a5658e97bc961acf",
+          "sha256": "942b0d4accc9704861c7781558829b1d521df21226ad97bd01e1e43b1518d3e6"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.10-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.10-windows-i686.zip",
+          "size": 149789537,
+          "md5": "ad682b60068ab034da1f24560458ace1",
+          "sha256": "91bcb3e725ff056801a7057661c36a47d0fd3327a83342656bce11d6ed71b13d"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.10-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.10-windows-x86_64.zip",
+          "size": 178861490,
+          "md5": "e85d1b8f2a9ffac40ebd9f301331e16e",
+          "sha256": "035c084d69046722a0b2ceda31e00065f7512380ffd0f03b33ef4429eec92a7c"
+        }
+      }
+    },
+    "1.10.9": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.9-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.9-linux-aarch64.tar.gz",
+          "size": 173387079,
+          "md5": "2c4217eacac80f1009f7a38b6f5cbead",
+          "sha256": "be222882e3674f960f43b6842f7bbb52a369977e40d5dcd26498793e1cd2dfb6"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.9-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.9-linux-i686.tar.gz",
+          "size": 154127622,
+          "md5": "66b76929e97713aa76932861a1bbe001",
+          "sha256": "012d6b13d9c9b98d56b4b0a67fe5e8efc59df880dd432beb062c2a1502238d86"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.9-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.9-linux-x86_64.tar.gz",
+          "size": 174026228,
+          "md5": "fbdfdc96064c3d78646f80d0979274e5",
+          "sha256": "5a2d2c5224594b683c97e7304cb72407fbcf0be4a0187789cba1a2f73f0cbf09"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.9-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.9-macos-aarch64.tar.gz",
+          "size": 135977058,
+          "md5": "806bd3ece3cafc9bbfefdfcc7b17d8c9",
+          "sha256": "e62e00b22408159cba3d669f2d9e8b60c1d23b5c2d1c22ec25f4957d15ca98ef"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.9-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.9-macos-x86_64.tar.gz",
+          "size": 151026570,
+          "md5": "be1fcb65f5a19d59487667bf9df872f8",
+          "sha256": "f80c93c30a18d8a5dc7f37d0cc94757fd3857651268e4a9e2d42d3b1ea3372f1"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.9-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.9-windows-i686.zip",
+          "size": 149710588,
+          "md5": "54c3e903c18cda88e90e5a3efb688714",
+          "sha256": "aae6b5df162a9acd6f38c3c4c94f80fa321b90e370730373a0c15a06e09ad769"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.9-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.9-windows-x86_64.zip",
+          "size": 178791210,
+          "md5": "f3e3293b539f22f91f97ab1949fdb602",
+          "sha256": "5917e3bab7fddb10e82c9cc6a03bcf8b09bcdf9423652bd314dd7a5840c1fe79"
+        }
+      }
+    },
+    "1.10.8": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.8-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.8-linux-aarch64.tar.gz",
+          "size": 173301473,
+          "md5": "83c2008e1a821c3e3994a03f22375753",
+          "sha256": "8d63dd12595a08edc736be8d6c4fea1840f137b81c62079d970dbd1be448b8cd"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.8-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.8-linux-i686.tar.gz",
+          "size": 154145091,
+          "md5": "069d12a942d8cf923551291367c5582a",
+          "sha256": "0258b5ae2aafc32f4b916b7aacc6887f7581a55e1726d7fb6f3655ed7e126430"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.8-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.8-linux-x86_64.tar.gz",
+          "size": 173210703,
+          "md5": "9adbe987a3f93ffe1cf64c11b50d96f3",
+          "sha256": "0410175aeec3df63173c15187f2083f179d40596d36fd3a57819cc5f522ae735"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.8-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.8-macos-aarch64.tar.gz",
+          "size": 135724771,
+          "md5": "cd1e2a78450ad25fb10cab5ef590b673",
+          "sha256": "cdd5891a7b143bde835a79155471b82c5482d4dc5576f719351810548242e64b"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.8-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.8-macos-x86_64.tar.gz",
+          "size": 150078614,
+          "md5": "05d291e0f1a92d77b4cc8c34a1a86d85",
+          "sha256": "8dae60def14db9e9b0f70891f15483d05785ae27a2c14f8f4b1ce27010e4015f"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.8-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.8-windows-i686.zip",
+          "size": 149556179,
+          "md5": "98cecbf086394902bcfae78015563344",
+          "sha256": "bbe3460c8a2af06fba5d56edd704d95be5bcc9c6811dae29c59dcf5e91752e66"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.8-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.8-windows-x86_64.zip",
+          "size": 178748280,
+          "md5": "cdcc1903c80e18cf8f001362297fe4e2",
+          "sha256": "b6aaecf13072e22707b8c1488a361c8bab3128df5bdeac67348c9caeaac6ad64"
+        }
+      }
+    },
+    "1.10.7": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.7-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.7-linux-aarch64.tar.gz",
+          "size": 173812789,
+          "md5": "159523b633717ce1df55d976007d9937",
+          "sha256": "93bf1b113f297c817310f77d1edce4ab9dcbf49432489cb8df09afbf93d1e5a0"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.7-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.7-linux-i686.tar.gz",
+          "size": 154198820,
+          "md5": "814dac64f861f16f8179f8cd5239259d",
+          "sha256": "3e5afefd8a77d1e96b7037bfcd23def8f8993e3d0ca8408fffb292fa60a25cd0"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.7-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.7-linux-x86_64.tar.gz",
+          "size": 173358835,
+          "md5": "4671e82335a245a4d6d27a55e37db642",
+          "sha256": "21b2c69806aacf191d7c81806c7d9918bddab30c7b5b8d4251389c3abe274334"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.7-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.7-macos-aarch64.tar.gz",
+          "size": 135965160,
+          "md5": "64599f2f7a4a614f6e3ee472eb0f4256",
+          "sha256": "8beb61a29a6c32e26f55070dba8ded37f8572ad07aebd461a06ff5b10d48dc36"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.7-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.7-macos-x86_64.tar.gz",
+          "size": 151349210,
+          "md5": "62663cf0e3203239f5cf309bd7a1aded",
+          "sha256": "4643d1052ed478b646be06f545b50698fbc572b216dcca3bca69f429ce0e1321"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.7-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.7-windows-i686.zip",
+          "size": 149635854,
+          "md5": "0a2f0fcc4d735819f1baa0d02a2428e1",
+          "sha256": "048af7e466418450d3f68f5dd55aff14d4cd565b6c78987792dc30872fbbfb7a"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.7-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.7-windows-x86_64.zip",
+          "size": 179225563,
+          "md5": "f280487a8df8a612a497caf6d3efabe9",
+          "sha256": "7863d4e40450cd98c4d3da5f2f496f0dba8987238a8522d05b93f8884872520a"
+        }
+      }
+    },
+    "1.10.6": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.6-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.6-linux-aarch64.tar.gz",
+          "size": 173488394,
+          "md5": "c1477441aa64fb9135cd5bd93df42991",
+          "sha256": "5530359839544ba1ee8f6f66728fd4f9b591822c1633f93cf9672c7f9528fc3a"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.6-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.6-linux-i686.tar.gz",
+          "size": 154218170,
+          "md5": "0cf56e19385f715f07b2a2f78210cc41",
+          "sha256": "52771086511905c22669bc8667a98a97ad26e82747a429165fde2641672e962b"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.6-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.6-linux-x86_64.tar.gz",
+          "size": 174129316,
+          "md5": "2237c861ce0da8ccecbf9395659618c7",
+          "sha256": "8b53429e17585c66476b39f2b2279da207ea0f310c55db38f3410bdd4f6a3d49"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.6-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.6-macos-aarch64.tar.gz",
+          "size": 135853747,
+          "md5": "f12140fb89972baff783559d0e2aa0f9",
+          "sha256": "7d55684281c204c5cc370edf0bc5fd6ead32d78236cda0c88b1ebeaed2bbfacb"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.6-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.6-macos-x86_64.tar.gz",
+          "size": 151310455,
+          "md5": "c5c11334cb07d6a1928ded0f19e5739f",
+          "sha256": "204b91f2d1f6342280e006468fd4ea91673e13f4f9f0010b72ffdd11a5dedaca"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.6-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.6-windows-i686.zip",
+          "size": 149495775,
+          "md5": "2dd9fd6c423468a3b50a3a59734f2b18",
+          "sha256": "416cfd8a35a8a92b49d8c67d27b47a4371d2f0b684a4faa1ffeebeab3d402d81"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.6-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.6-windows-x86_64.zip",
+          "size": 178993986,
+          "md5": "b0ebae59ea3f87ddb4b855e7c1123eb2",
+          "sha256": "ddccff336b2b0f5ef56d634cd3dd37d59c2b028d14297b42c166d8c04927d91f"
+        }
+      }
+    },
+    "1.10.5": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.5-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.5-linux-aarch64.tar.gz",
+          "size": 173394432,
+          "md5": "634824ed7faa649948a6931e2aafd69a",
+          "sha256": "59620a93cd64542d1f901ef9cfaecd310d0673b2bab2e2345774d456952a7ad0"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.5-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.5-linux-i686.tar.gz",
+          "size": 154199971,
+          "md5": "3ef50969cc2c64bd661d6ec991778261",
+          "sha256": "508b573b0afc6427ce6b2bdfe471fcf86ff920383193aedb5fd6982bcb5cdb8a"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.5-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.5-linux-x86_64.tar.gz",
+          "size": 173909866,
+          "md5": "ffeece94b870e6bc08577429a7262002",
+          "sha256": "33497b93cf9dd65e8431024fd1db19cbfbe30bd796775a59d53e2df9a8de6dc0"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.5-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.5-macos-aarch64.tar.gz",
+          "size": 135895654,
+          "md5": "e8395c646763c6f74063315f71ffea38",
+          "sha256": "d503d720169e58dd60244063831a6f7bc72a345529a9622f6dc9f3825b0b9ab6"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.5-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.5-macos-x86_64.tar.gz",
+          "size": 150192566,
+          "md5": "a89babc1d8b7a9da696468770bf2f18a",
+          "sha256": "fb2754d6038c54abc8c04aff6dfe5b51987a6834d4a7a4658130f59e36d9b403"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.5-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.5-windows-i686.zip",
+          "size": 149619965,
+          "md5": "6012b2dbc069eedbfc89ea41cb25009a",
+          "sha256": "5a2ff3252ae8707c1e9c5b46389c596b4f8036efeff64fea5e1acd219a5db3c9"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.5-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.5-windows-x86_64.zip",
+          "size": 178745098,
+          "md5": "345f4c01bf279da58f8bacc8dd3b1847",
+          "sha256": "7b21b30c0a412df7bf2472ff5ee5d47aab5a9b4f184a7595da62eea3f10650b1"
+        }
+      }
+    },
+    "1.10.4": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.4-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.4-linux-aarch64.tar.gz",
+          "size": 174444470,
+          "md5": "db71df7aa635390b56ee691907b35f6d",
+          "sha256": "ae4ae6ade84a103cdf30ce91c8d4035a0ef51c3e2e66f90a0c13abeb4e100fc4"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.4-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.4-linux-i686.tar.gz",
+          "size": 153943073,
+          "md5": "c3c703a181b13bac15bcf526757a6b83",
+          "sha256": "5771c6032b2be4442f4d4f4fc610eac09a48888ce1f4a41d10208e9d413f5054"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.4-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.4-linux-x86_64.tar.gz",
+          "size": 173704015,
+          "md5": "6e8e82c41098b88599ce1e985aafb8b6",
+          "sha256": "079f61757c3b5b40d2ade052b3cc4816f50f7ef6df668825772562b3746adff1"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.4-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.4-macos-aarch64.tar.gz",
+          "size": 163105646,
+          "md5": "41d3c67af053a479a1728ba31b7d1624",
+          "sha256": "97b88d7f9b5724118769f3a3bd259f8f7ada48cdecf3d584cf68162dd873dd10"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.4-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.4-macos-x86_64.tar.gz",
+          "size": 150117788,
+          "md5": "79fd06db37c58d27cf1361eebebf85c6",
+          "sha256": "259c18a5294dd41cc60117ecb9fc5a8b2f659807284903a65439fb9d3818c763"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.4-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.4-windows-i686.zip",
+          "size": 147536060,
+          "md5": "8e2eb50b5c15d43b9c7046e9ce618f40",
+          "sha256": "6458722ff8f34592b5f48b872c54d18218edd51e22deecb7d755bbaf3fb7ae66"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.4-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.4-windows-x86_64.zip",
+          "size": 176725622,
+          "md5": "3f56079048611ea999458b4fc76ddaac",
+          "sha256": "aa31c7d074060c2aab84a83ccd2fcabef6900c6e5f41cff8fd514fc28c42dc44"
+        }
+      }
+    },
+    "1.10.3": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.3-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.3-linux-aarch64.tar.gz",
+          "size": 174324620,
+          "md5": "6a40929ec458f116195f09b9e3c8b054",
+          "sha256": "2d52a61826872b3170c65f99a954bd9d21a31211cb50948056d924f811a0024f"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.3-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.3-linux-i686.tar.gz",
+          "size": 153918819,
+          "md5": "2f64a26bfaf903cd181f65d7ba80da2c",
+          "sha256": "f13be078c5ee7c98fd6a39a537199c253543acbd49bedc243f397cd51c7aeb58"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.3-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.3-linux-x86_64.tar.gz",
+          "size": 173495204,
+          "md5": "4fb96e1185bcb23ee20ee71eee2a7bd1",
+          "sha256": "81b910c922fff0e27ae1f256f2cc803db81f3960215281eddd2d484721928c70"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.3-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.3-macos-aarch64.tar.gz",
+          "size": 163071186,
+          "md5": "3b72c27a5a96ec99034820ef734603dd",
+          "sha256": "9ea32daa1bef34c8e48d6c76187f48fd2bf1054cc921fb8c374b737b51c9ffdd"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.3-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.3-macos-x86_64.tar.gz",
+          "size": 149887619,
+          "md5": "77b2a03310c0df5570e6611183845f22",
+          "sha256": "af61600db0abdc56fffb1b47cd18c30213b8925796546b53b657e164126082b4"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.3-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.3-windows-i686.zip",
+          "size": 147754449,
+          "md5": "ff6883b61a02cd4daac5f311dd90bcdd",
+          "sha256": "564bb4067eeb3a1aca706b9d2f771fd8748b8cb7cb7a7d312dd5a2a02313d31f"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.3-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.3-windows-x86_64.zip",
+          "size": 176572489,
+          "md5": "16f40b196bb015a331997c37bee6f2bb",
+          "sha256": "0d4e17b9816a35531242a0ecb1271cac25b88acec3b04f257816c752acdf38fd"
+        }
+      }
+    },
+    "1.10.2": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.2-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.2-linux-aarch64.tar.gz",
+          "size": 162418265,
+          "md5": "b0e6bfc419ca65cd15e95ef7df3ed768",
+          "sha256": "f319ff2812bece0918cb9ea6e0df54cc9412fc5ef8c0589b6a4fea485c07535d"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.2-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.2-linux-i686.tar.gz",
+          "size": 152842630,
+          "md5": "66b75f4eefa7a95b8bc9302d386745e8",
+          "sha256": "1699988a1733375991937b78689339e8b8117fb0a1700b54a2c984829ce646e6"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.2-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.2-linux-x86_64.tar.gz",
+          "size": 169654402,
+          "md5": "c3a4713c1dd0d2ff9db3693f3c04d1e1",
+          "sha256": "51bccc9bb245197f24e6b2394e6aa69c0dc1e41b4e300b796e17da34ef64db1e"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.2-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.2-macos-aarch64.tar.gz",
+          "size": 146479998,
+          "md5": "dcf106516db9455e037d67619a3e2b93",
+          "sha256": "c7392237725b54d2d145bf56ce362e502596ea4338523a91bf20ce02379cea80"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.2-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.2-macos-x86_64.tar.gz",
+          "size": 146016624,
+          "md5": "9f82b146bdac1a6d5d54275c84f3ed3e",
+          "sha256": "52679b9285b9aa8354afade8cc5a6c98d30af31ee72e4e879d17cef5dd4d4213"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.2-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.2-windows-i686.zip",
+          "size": 188329765,
+          "md5": "c6307975bc2f40f3cb4a3fe15e5feb8a",
+          "sha256": "647c5cd8e9c59a6cb986666aa08f751715122807c4f91a89ba8919518ceb73a8"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.2-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.2-windows-x86_64.zip",
+          "size": 236311511,
+          "md5": "5b920c97e26da8582306598f5f73a31a",
+          "sha256": "ac0b542968e8fd028189ed09760e88d60509b008f5b437e845289c52cc560e28"
+        }
+      }
+    },
+    "1.10.1": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.1-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.1-linux-aarch64.tar.gz",
+          "size": 161483760,
+          "md5": "6952625248fcba91672ec3194b79fbfb",
+          "sha256": "67e912a2b8ae0fd2469a1a42c7d70b18cdf30b06dc717653fac64b710ca0575e"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.1-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.1-linux-i686.tar.gz",
+          "size": 152870162,
+          "md5": "62dbb0818a48a4d0983736d5c8c359f4",
+          "sha256": "46ae06f5690b4812e091f8e2a1b8a1caf849b5c842e8c7c3b8e474aaa7302526"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.1-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.1-linux-x86_64.tar.gz",
+          "size": 167854807,
+          "md5": "0b72281a5261c0965385d60e2fcdc234",
+          "sha256": "fe924258e55d074410b134195cf6b85cbe8f307fcd05a4fdd23f8944c5941a70"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.1-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.1-macos-aarch64.tar.gz",
+          "size": 146659162,
+          "md5": "3db530f1f61c88c3f73d6c0207c51777",
+          "sha256": "fc7a2e5945deb565354d504bcb4c87fade7ba3d45ef8345e3812aac09664e70e"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.1-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.1-macos-x86_64.tar.gz",
+          "size": 145903732,
+          "md5": "b09205ce9b86a13539cf304e7dea447a",
+          "sha256": "fb9bfb20e4ea1d1b7e9eeb790a6d495f568a921040134003f749dd84982cd726"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.1-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.1-windows-i686.zip",
+          "size": 188512300,
+          "md5": "d0c6f5c0c2a765618db90dcb57b33e71",
+          "sha256": "6f83ec576d6b9b7da9a871685e57430c2655bd752d782fa7b0b7b69204c1328c"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.1-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.1-windows-x86_64.zip",
+          "size": 236783274,
+          "md5": "12ae696e08857610825f9d0fe32d26d8",
+          "sha256": "8731f104e3dcbe8eded46b92ea773af228497280ad2f49fe529f38f99eb48ae3"
+        }
+      }
+    },
+    "1.10.0": {
+      "files": {
+        "linux-aarch64": {
+          "name": "julia-1.10.0-linux-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.0-linux-aarch64.tar.gz",
+          "size": 160875701,
+          "md5": "836371275ae1baeece2fd74832f94c5c",
+          "sha256": "048d96b4398efd524e94be3f49e8829cf6b30c8f3f4b46c75751a4679635e45b"
+        },
+        "linux-i686": {
+          "name": "julia-1.10.0-linux-i686.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.0-linux-i686.tar.gz",
+          "size": 152845339,
+          "md5": "84643f34cb6bcde2cdc526ccb5c83d24",
+          "sha256": "413663f3d85dcf605236d048bd632a29dc31b451b9b04324daa82ba81c6c8c42"
+        },
+        "linux-x86_64": {
+          "name": "julia-1.10.0-linux-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.0-linux-x86_64.tar.gz",
+          "size": 168592090,
+          "md5": "c16f16304cac9af1501ae71c02cb4d1e",
+          "sha256": "a7298207f72f2b27b2ab1ce392a6ea37afbd1fbee0f1f8d190b054dcaba878fe"
+        },
+        "macos-aarch64": {
+          "name": "julia-1.10.0-macos-aarch64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.0-macos-aarch64.tar.gz",
+          "size": 146725702,
+          "md5": "7a439572f06206f22a1827988e13c109",
+          "sha256": "dc4ca01b1294c02d47b33ef26d489dc288ac68655a03774870c6872b82a9a7d6"
+        },
+        "macos-x86_64": {
+          "name": "julia-1.10.0-macos-x86_64.tar.gz",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.0-macos-x86_64.tar.gz",
+          "size": 145105467,
+          "md5": "62613252f1ec3d1920fe87adc075096d",
+          "sha256": "eb1cdf2d373ee40412e8f5ee6b4681916f1ead6d794883903619c7bf147d4f46"
+        },
+        "windows-i686": {
+          "name": "julia-1.10.0-windows-i686.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.0-windows-i686.zip",
+          "size": 146969745,
+          "md5": "a13ff9a66622c4f90b6cbf1eb8e1ef8e",
+          "sha256": "06c221460ae7a6cb03c3640f228ba1679bd0c8ea26a5bc081953f4cf1bca5e51"
+        },
+        "windows-x86_64": {
+          "name": "julia-1.10.0-windows-x86_64.zip",
+          "url": "https://github.com/MohammadRaziei/julialang/releases/download/__download__/julia-1.10.0-windows-x86_64.zip",
+          "size": 172485894,
+          "md5": "7ebb0fc628b3d25dded62cb6ac71141c",
+          "sha256": "dc6e566772a0eed89df1bc63892802b1cb4ad92a2aacafa5e0e2be7a8cd93883"
         }
       }
     }
