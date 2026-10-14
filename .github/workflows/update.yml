@@ -7,11 +7,10 @@ name: Sync Julia binaries
 # GitHub pauses scheduled workflows after 60 days without repository activity; re-enable it in the Actions tab
 # (or run this workflow by hand) if that ever happens.
 #
-# Starting the next workflow (wheels.yml): a push made with the default GITHUB_TOKEN never triggers other
-# workflows, so
-#   * with the secret PUSH_TOKEN (a personal access token with contents + actions write) this job pushes with it,
-#     the push of julia-list.json triggers wheels.yml, and the "mirror" commit is skipped by this workflow below;
-#   * without it, this job falls back to dispatching wheels.yml explicitly.
+# The last step ALWAYS dispatches wheels.yml (unless this is a dry run), also when nothing was new or the sync
+# failed half-way. wheels.yml decides by itself (tools/release.py plan) whether there is anything to release, so an
+# extra dispatch costs a few seconds. (A push made with GITHUB_TOKEN cannot start other workflows, but
+# workflow_dispatch can.)
 on:
   push:
     branches: [master]
@@ -49,8 +48,6 @@ jobs:
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PUSH_TOKEN || github.token }}
 
       - uses: actions/setup-python@v5
         with:
@@ -85,15 +82,9 @@ jobs:
           git push origin "HEAD:${{ github.ref_name }}"
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      # Only needed when the push above was made with GITHUB_TOKEN and therefore started nothing.
-      - name: Start the wheel build (no PUSH_TOKEN)
-        if: ${{ always() && steps.commit.outputs.changed == 'true' }}
+      # Always, so the release logic runs after every sync (it skips itself when there is nothing to release).
+      - name: Start the wheels workflow
+        if: ${{ always() && inputs.dry_run != true }}
         env:
           GH_TOKEN: ${{ github.token }}
-          HAS_PUSH_TOKEN: ${{ secrets.PUSH_TOKEN != '' && 'true' || 'false' }}
-        run: |
-          if [ "$HAS_PUSH_TOKEN" = "true" ]; then
-            echo "Pushed with PUSH_TOKEN: the push itself starts wheels.yml."
-          else
-            gh workflow run wheels.yml --ref "${{ github.ref_name }}"
-          fi
+        run: gh workflow run wheels.yml --ref "${{ github.ref_name }}"

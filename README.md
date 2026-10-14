@@ -98,10 +98,8 @@ Versions are `0.0.N` for now (patch bumps) while the pipeline is proven. Set the
 3. Every push to `master` starts **Sync Julia binaries** (it also runs weekly, and by hand from the Actions tab, where
    `dry_run` shows the plan and `limit` mirrors in slices). An empty `julia-list.json` is simply filled from the site:
    the first run mirrors every version since 1.10 (a few GB per version across platforms). The sync skips the commits
-   CI makes itself, so it never loops.
-   Optional but recommended: add a secret `PUSH_TOKEN` (a personal access token with contents + actions write).
-   A push made with the default `GITHUB_TOKEN` cannot trigger other workflows, so without the secret the sync starts
-   **Test, build and release** by dispatching it; with the secret, its push of `julia-list.json` triggers it directly.
+   CI makes itself, so it never loops. As its last step it always starts **Test, build and release**, even when nothing
+   was new; that workflow decides by itself whether there is something to release.
 4. PyPI (optional): the wheels are about 150-250 MB, above PyPI's default 100 MB per-file limit, so ask PyPI support
    for a size increase first. Then configure trusted publishing for this repo and workflow (`wheels.yml`) and set the
    repository variable `PUBLISH_PYPI=true`.
