@@ -15,7 +15,7 @@ julia-list.json is NOT kept in git: it is an asset of the `__download__` release
 there (404 = empty), a local untracked working copy is kept, and the list is uploaded again after every version, so
 an interrupted run loses nothing. A GitHub release holds at most ~1000 assets, so after SHARD_CAP files the next
 archives go to `__download_2__`, `__download_3__` ... (each file's `url` in the list says where it is).
-`--max-minutes` stops cleanly before a CI job times out and reports `more=true` so the workflow can run again.
+`--max-minutes` stops cleanly before a CI job times out and reports `more=true`; the next run continues where this one stopped.
 """
 from __future__ import annotations
 

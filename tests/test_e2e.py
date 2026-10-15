@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -119,7 +120,8 @@ def test_full_pipeline(tmp_path: Path):
     shutil.copytree(ROOT / "julialang", src / "julialang", ignore=shutil.ignore_patterns("__pycache__"))
     for f in ("pyproject.toml", "README.md", "LICENSE"):
         shutil.copy2(ROOT / f, src / f)
-    run([sys.executable, ROOT / "tools/release.py", "set-version", "0.5.7"], cwd=src)
+    pyproject = src / "pyproject.toml"
+    pyproject.write_text(re.sub(r'(?m)^version = ".*"$', 'version = "0.5.7"', pyproject.read_text(), count=1))
     dist = tmp_path / "dist"
     run([sys.executable, "-m", "pip", "wheel", "--no-deps", "--no-build-isolation", "-q", "-w", dist, src])
     wheel = next(dist.glob("julialang-0.5.7-py3-none-any.whl"))

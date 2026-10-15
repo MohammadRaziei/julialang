@@ -1,9 +1,8 @@
-"""Crawler (HTML fixtures shaped like the julialang.org tables) and release-planning tests."""
+"""Crawler (HTML fixtures shaped like the julialang.org tables) and mirror-list tests."""
 from __future__ import annotations
 
 import hashlib
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -81,75 +80,6 @@ def test_plan_filters_min_version_and_already_mirrored():
     todo = sync.plan(catalog, lst, "1.10.0", 0)
     assert [(v, sorted(f)) for v, f in todo] == [("1.13.1", ["linux-x86_64"]), ("1.10.12", ["macos-aarch64"])]
     assert len(sync.plan(catalog, lst, "1.10.0", 1)) == 1
-
-
-# --------------------------------------------------------------------------- tools/release.py
-
-
-def release(cwd: Path, *args: str) -> dict:
-    out = subprocess.run([sys.executable, str(ROOT / "tools/release.py"), *args], cwd=cwd, capture_output=True, text=True, check=True).stdout
-    return dict(line.split("=", 1) for line in out.splitlines() if "=" in line)
-
-
-def git(cwd: Path, *args: str, author: str = "human") -> None:
-    subprocess.run(["git", "-c", f"user.name={author}", "-c", "user.email=a@b.c", *args], cwd=cwd, check=True, capture_output=True)
-
-
-def test_release_flow(tmp_path: Path):
-    (tmp_path / "pyproject.toml").write_text('[project]\nname = "x"\nversion = "0.0.0"\n')
-    (tmp_path / "README.md").write_text("intro\n<!-- release:start -->\nold\n<!-- release:end -->\noutro\n")
-    (tmp_path / "julialang").mkdir()
-    (tmp_path / "julialang/__init__.py").write_text("")
-    git(tmp_path, "init", "-q", "-b", "master")
-    git(tmp_path, "add", "-A")
-
-    # first ever release: no tag yet -> prepare 0.0.1
-    git(tmp_path, "commit", "-qm", "feat: first version")
-    plan = release(tmp_path, "plan")
-    assert (plan["mode"], plan["version"]) == ("prepare", "0.0.1") and len(plan["sha"]) == 40
-    release(tmp_path, "bump", "--version", "0.0.1", "--repo", "me/julialang")
-    git(tmp_path, "add", "-A")
-    git(tmp_path, "commit", "-qm", "chore(release): v0.0.1", author="github-actions[bot]")
-
-    # the bot commit is recognised -> release; once tagged -> skip
-    assert release(tmp_path, "plan")["mode"] == "release"
-    git(tmp_path, "tag", "v0.0.1")
-    assert release(tmp_path, "plan")["mode"] == "skip"
-
-    # a new Julia (or any non-package change) needs no release; --force still can
-    (tmp_path / "README.md").write_text("intro, edited\n<!-- release:start -->\nold\n<!-- release:end -->\n")
-    git(tmp_path, "commit", "-qam", "docs: tweak README")
-    assert release(tmp_path, "plan")["mode"] == "skip"
-    assert release(tmp_path, "plan", "--force")["mode"] == "prepare"
-
-    # a package change -> prepare 0.0.2 (patch) or 0.1.0 (minor)
-    (tmp_path / "julialang/cli.py").write_text("x = 1\n")
-    git(tmp_path, "add", "-A")
-    git(tmp_path, "commit", "-qm", "feat: add uninstall")
-    (tmp_path / "julialang/cli.py").write_text("x = 2\n")
-    git(tmp_path, "commit", "-qam", "fix: spec parsing")
-    git(tmp_path, "commit", "-qm", "chore: mirror Julia (latest: 1.13.1)", "--allow-empty")  # bookkeeping: not in the changelog
-    assert release(tmp_path, "plan")["version"] == "0.0.2"
-    assert release(tmp_path, "plan", "--bump", "minor")["version"] == "0.1.0"
-    release(tmp_path, "set-version", "0.0.2")
-    assert 'version = "0.0.2"' in (tmp_path / "pyproject.toml").read_text()
-    release(tmp_path, "bump", "--version", "0.0.2", "--repo", "me/julialang")
-
-    changelog = (tmp_path / "CHANGELOG.md").read_text()
-    assert "## [0.0.2]" in changelog and "- feat: add uninstall" in changelog and "- fix: spec parsing" in changelog
-    notes = release_notes(tmp_path, "0.0.2")
-    assert "mirror Julia" not in notes and "first version" not in notes  # only commits since the last tag
-    readme = (tmp_path / "README.md").read_text()
-    assert "intro, edited" in readme and "old" not in readme and "releases/tag/v0.0.2" in readme
-    assert "fix: spec parsing" in release_notes(tmp_path, "0.0.2")
-
-    # a human typing the same commit message is not treated as a release commit
-    git(tmp_path, "commit", "-qam", "chore(release): v0.0.2")
-    assert release(tmp_path, "plan")["mode"] != "release"
-
-
-def release_notes(cwd: Path, version: str) -> str:
-    return subprocess.run([sys.executable, str(ROOT / "tools/release.py"), "notes", version], cwd=cwd, capture_output=True, text=True, check=True).stdout
 
 
 # --------------------------------------------------------------------------- sync.py: list handling and sharding

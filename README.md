@@ -19,9 +19,7 @@ tooling. The wheel is tiny (a few KB, pure Python); the official Julia binaries 
 downloaded on demand by the `julialang` command, so you need no access to julialang.org, no `apt`, no installer, and
 you can keep several Julia versions side by side and switch between them.
 
-<!-- release:start -->
-**Latest release:** [v0.0.2](https://github.com/MohammadRaziei/julialang/releases/tag/v0.0.2) · [changelog](CHANGELOG.md)
-<!-- release:end -->
+**Releases:** [GitHub releases](https://github.com/MohammadRaziei/julialang/releases/latest) · [PyPI](https://pypi.org/project/julialang/)
 
 ## Installation
 
@@ -80,28 +78,25 @@ commas: `julialang install ">=1.10" "<1.13"`.
 
 ## How it works
 
-Three kinds of GitHub releases act as storage, and two workflows do the work:
+Three kinds of GitHub releases act as storage, and two independent workflows do the work:
 
 | Tag | Kind | Holds |
 | --- | --- | --- |
 | `__download__`, `__download_2__`, ... | prerelease | mirrored Julia archives (`julia-<version>-<os>-<arch>.<ext>`); `__download__` also holds **`julia-list.json`** (md5 + sha256 and URL of every file). GitHub allows ~1000 assets per release, so the mirror starts the next one after 900 files |
-| `__beta__` | prerelease | the tested build waiting to be released |
-| `v0.0.N` | release | the published wheel and sdist |
+| `__beta__` | prerelease | the latest tested build of master (wheel + sdist) |
+| `vX.Y.Z` | release | the published wheel and sdist |
 
 `julia-list.json` is **not** in git: it is only a release asset, uploaded again after every mirrored version.
 
 ```
-julialang.org (crawled) ──▶ update.yml ──▶ __download__ (+ __download_N__) + julia-list.json asset
-                                │ dispatch (always)
-                                ▼
-         wheels.yml  plan ─ package files changed since the last tag?
-                      └─ prepare: tests → build the wheel → smoke test on 5 OSes
-                                  (pip install, `julialang install` FROM THE MIRROR, run julia)
-                                  → __beta__ → commit "chore(release): v0.0.N"
-                                                        │ dispatch
-                                                        ▼
-                      └─ release: sees that commit → tags v0.0.N, GitHub release, PyPI
+julialang.org (crawled) ──▶ sync.yml ──▶ __download__ (+ __download_N__) + julia-list.json asset
+
+push to master ──▶ wheel.yml: ruff + pytest → build wheel/sdist → smoke test on 5 OSes
+                              (pip install, `julialang install` FROM THE MIRROR, run julia) → __beta__
+push of tag vX.Y.Z ──▶ the same, then → GitHub release vX.Y.Z + PyPI
 ```
+
+`sync.yml` and `wheel.yml` never call each other.
 
 * **`tools/sync.py`** crawls <https://julialang.org/downloads/manual-downloads/> and
   <https://julialang.org/downloads/oldreleases/>, downloads every stable Julia that is not mirrored yet (`--min-version`
@@ -109,13 +104,24 @@ julialang.org (crawled) ──▶ update.yml ──▶ __download__ (+ __downloa
   sha256 in `julia-list.json`. Only archives with a verifiable hash and a known name are mirrored: `.tar.gz` for
   Linux/macOS, `.zip` for Windows (no installers, musl, FreeBSD, pre-releases). `--source json` uses the official
   `versions.json` feed instead. A full backfill takes many hours, so the job stops itself before the 6 h limit
-  (`--max-minutes`) and starts another run until nothing is left.
-* **`update.yml`** runs on every push, weekly and by hand. It always starts `wheels.yml` at the end; since the smoke
-  test installs Julia from the mirror on every OS, each sync doubles as a health check of the mirror.
-* **`wheels.yml`** decides by `tools/release.py` whether the **package** needs a release: only changes to `julialang/`,
-  `pyproject.toml` or `LICENSE` since the last tag count, so a new Julia version does **not** cause a new wheel. The
-  version is `0.0.N` for now (set the repository variable `RELEASE_BUMP=minor` for `0.N.0`); `CHANGELOG.md` is generated
-  from commit subjects.
+  (`--max-minutes`); the next run (weekly cron, a push, or a manual start) continues where it stopped.
+* **`sync.yml`** ("Sync Julia binaries") runs on every push, weekly and by hand. It only updates the mirror: it makes no
+  package release and starts no other workflow.
+* **`wheel.yml`** ("Wheel") runs on every push to master and on tags `v*`. Since its smoke test installs Julia from the
+  mirror on every OS, it doubles as a health check of the mirror.
+
+## Releasing
+
+Versions are bumped by hand: edit `version` in `pyproject.toml`, commit, then tag and push.
+
+```bash
+git tag v0.1.0
+git push origin master v0.1.0
+```
+
+The tag must equal the version in `pyproject.toml` (otherwise `wheel.yml` fails immediately). The tag run publishes the
+GitHub release (with generated notes) and uploads to PyPI. To retry a failed upload, re-run the tag's workflow run:
+`twine upload --skip-existing` and the release step are safe to repeat.
 
 Integrity: `julialang install` checks the sha256 and md5 from `julia-list.json`. Both come from the same GitHub repository
 as the archives, so this protects against corrupted downloads, not against someone taking over the repository.
@@ -126,14 +132,14 @@ as the archives, so this protects against corrupted downloads, not against someo
    `julialang/_state.py` and `tools/sync.py`, and the URLs in `pyproject.toml`) and push.
 2. Settings → Actions → General → Workflow permissions: **Read and write**.
 3. Every push starts **Sync Julia binaries**; run it by hand from the Actions tab for a `dry_run` (shows the plan) or to
-   mirror in slices with `limit`. The first full run needs several consecutive jobs; they continue by themselves.
+   mirror in slices with `limit`. The first full backfill needs several runs: start it again by hand (or wait for the
+   weekly cron) until nothing is left.
 4. PyPI (optional): add the repository secret `PYPI_PASS` (an API token; for a new project use a token with the scope
    of the whole account) under Settings → Secrets and variables → Actions. Secrets are per repository, so those of
    another repo do not apply. `PYPI_USER` is only needed for a non-token login and must be `__token__` when
-   `PYPI_PASS` is a token. Every release then uploads itself; without the secret the release job prints a warning and
-   skips the upload. To publish a release that already exists, run the **Publish to PyPI** workflow (input: the tag,
-   empty = latest). `pip install julialang -f https://github.com/mohammadraziei/julialang/releases/latest` works
-   without PyPI.
+   `PYPI_PASS` is a token. Every tag release then uploads itself; without the secret the run prints a warning and
+   skips the upload (add the secret and re-run the tag's run). `pip install julialang -f https://github.com/mohammadraziei/julialang/releases/latest`
+   works without PyPI.
 
 ## Notes
 

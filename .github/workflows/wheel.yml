@@ -1,0 +1,200 @@
+name: Wheel
+
+# The whole life of the package in one workflow (independent of sync.yml, which only mirrors Julia).
+# julialang is ONE pure-Python wheel (py3-none-any): Julia itself is downloaded at run time from the mirror.
+#
+#   push to master  ruff + pytest -> build wheel + sdist -> smoke test on every OS (a real `julialang install`
+#                   from the mirror) -> the files replace the assets of the `__beta__` prerelease
+#   push of v*      the same, then the files go to the GitHub release `vX.Y.Z` and to PyPI
+#
+# Releasing is manual: set `version` in pyproject.toml, commit, then
+#     git tag v0.1.0 && git push origin master v0.1.0
+# The tag must match the version in pyproject.toml or the run fails at once.
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wheel-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.init.outputs.version }}
+      release_name: ${{ steps.init.outputs.release_name }}
+      is_tag: ${{ steps.init.outputs.is_tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Read the version and choose the release
+        id: init
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          echo "version=$version" | tee -a "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+            if [ "$version" != "${tag#v}" ]; then
+              echo "::error title=Version mismatch::tag $tag does not match version $version in pyproject.toml"
+              exit 1
+            fi
+            echo "release_name=$tag" | tee -a "$GITHUB_OUTPUT"
+            echo "is_tag=true" | tee -a "$GITHUB_OUTPUT"
+          else
+            echo "release_name=__beta__" | tee -a "$GITHUB_OUTPUT"
+            echo "is_tag=false" | tee -a "$GITHUB_OUTPUT"
+          fi
+
+  unit:
+    needs: init
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pytest setuptools wheel ruff
+      - run: python -m ruff check .
+      - run: python -m pytest -q tests
+
+  build:
+    needs: [init, unit]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the wheel and the sdist
+        run: |
+          python -m pip install build twine
+          python -m build
+          python -m twine check dist/*
+          ls -l dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+          if-no-files-found: error
+
+  # A real end-to-end test on every OS: install the wheel, install Julia from the mirror, run it.
+  # It doubles as a health check of the mirror.
+  smoke:
+    needs: [init, build]
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { platform: linux-x86_64, runner: ubuntu-latest }
+          - { platform: linux-aarch64, runner: ubuntu-24.04-arm }
+          - { platform: macos-aarch64, runner: macos-latest }
+          - { platform: macos-x86_64, runner: macos-15-intel }
+          - { platform: windows-x86_64, runner: windows-latest }
+    runs-on: ${{ matrix.runner }}
+    env:
+      JULIALANG_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Install the wheel
+        shell: bash
+        run: python -m pip install dist/*.whl
+
+      - name: Install the latest Julia from the mirror and run it
+        shell: bash
+        run: |
+          julia && echo "julia without an install must fail" && exit 1 || true # the shim must explain, not crash
+          julialang fetch
+          latest=$(julialang latest)
+          echo "latest on the mirror: $latest"
+          julialang install
+          got=$(julia -e 'print(VERSION)')
+          echo "julia reports: $got"
+          [ "$got" = "$latest" ]
+          julialang status
+
+      - name: Install, switch and remove an older line
+        shell: bash
+        run: |
+          julialang install 1.10 --no-default
+          got=$(JULIALANG_VERSION=1.10 julia -e 'print(VERSION)')
+          echo "1.10 reports: $got"
+          case "$got" in 1.10.*) ;; *) exit 1 ;; esac
+          julialang use 1.10
+          julialang use latest
+          julialang uninstall 1.10 --yes
+          julialang list --installed
+
+  # Everything is healthy. On master the tested files replace the assets of the `__beta__` prerelease; on a tag
+  # they become the release `vX.Y.Z` and are uploaded to PyPI.
+  release:
+    needs: [init, smoke]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_NAME: ${{ needs.init.outputs.release_name }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: List the files
+        run: ls -l dist
+
+      - name: Replace the assets of the __beta__ prerelease
+        if: ${{ needs.init.outputs.is_tag != 'true' }}
+        run: |
+          if ! gh release view __beta__ --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create __beta__ --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
+              --title "Beta wheels" --notes "Latest build of master, tested but not released. Managed by CI - do not edit by hand."
+          fi
+          gh release view __beta__ --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | while read -r name; do
+            gh release delete-asset __beta__ "$name" --repo "$GITHUB_REPOSITORY" --yes
+          done
+          gh release upload __beta__ dist/* --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: Create the GitHub release
+        if: ${{ needs.init.outputs.is_tag == 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.init.outputs.release_name }}
+          name: julialang ${{ needs.init.outputs.version }}
+          files: dist/*
+          generate_release_notes: true
+          make_latest: true
+
+      # Secrets are per repository: the ones of another repo (e.g. phasma) do not apply here.
+      # PYPI_PASS is an API token; PYPI_USER must then be __token__ (or unset).
+      - name: Publish to PyPI
+        if: ${{ needs.init.outputs.is_tag == 'true' }}
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USER || '__token__' }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASS }}
+        run: |
+          if [ -z "$TWINE_PASSWORD" ]; then
+            echo "::warning title=PyPI upload skipped::The repository secret PYPI_PASS is not set (Settings > Secrets and variables > Actions). Add it and re-run this workflow."
+            exit 0
+          fi
+          python -m pip install twine
+          python -m twine upload --skip-existing dist/*
