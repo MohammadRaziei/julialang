@@ -1,0 +1,48 @@
+name: Publish to PyPI
+
+# Uploads the wheel and sdist of an existing GitHub release to PyPI. wheels.yml already does this at the end of every
+# release when the PYPI_PASS secret is set; run this workflow by hand to (re)publish a release that was made before the
+# secret existed or whose upload failed. It fails loudly when the secret is missing.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (empty = the latest release), e.g. v0.0.2"
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+      TWINE_USERNAME: ${{ secrets.PYPI_USER || '__token__' }}
+      TWINE_PASSWORD: ${{ secrets.PYPI_PASS }}
+    steps:
+      - name: Check the credentials
+        run: |
+          if [ -z "$TWINE_PASSWORD" ]; then
+            echo "::error title=PyPI::The repository secret PYPI_PASS is not set (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download the release files
+        run: |
+          if [ -z "$TAG" ]; then TAG=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName); fi
+          echo "publishing $TAG"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.whl' --pattern '*.tar.gz' --dir dist
+          ls -l dist
+          [ "$(ls dist/*.whl | wc -l)" -eq 1 ]
+
+      - name: Upload to PyPI
+        run: |
+          python -m pip install twine
+          python -m twine check dist/*
+          python -m twine upload --skip-existing dist/*

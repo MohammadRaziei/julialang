@@ -242,7 +242,13 @@ jobs:
           files: dist/*
           make_latest: true
 
-      # phasma-style: set the repository secrets PYPI_PASS (an API token) and, for a user/password login, PYPI_USER.
+      # phasma-style secrets: PYPI_PASS (an API token) and optionally PYPI_USER (must be __token__ when PYPI_PASS is a token).
+      # Secrets are per repository: the ones of another repo (e.g. phasma) do not apply here.
+      - name: Warn when PyPI is not configured
+        if: ${{ env.TWINE_PASSWORD == '' }}
+        run: |
+          echo "::warning title=PyPI upload skipped::The repository secret PYPI_PASS is not set, so nothing was uploaded to PyPI. Add it under Settings > Secrets and variables > Actions, then run the 'Publish to PyPI' workflow for this tag."
+
       - name: Publish to PyPI
         if: ${{ env.TWINE_PASSWORD != '' }}
         run: |

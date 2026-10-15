@@ -127,9 +127,13 @@ as the archives, so this protects against corrupted downloads, not against someo
 2. Settings → Actions → General → Workflow permissions: **Read and write**.
 3. Every push starts **Sync Julia binaries**; run it by hand from the Actions tab for a `dry_run` (shows the plan) or to
    mirror in slices with `limit`. The first full run needs several consecutive jobs; they continue by themselves.
-4. PyPI (optional): add the repository secret `PYPI_PASS` (an API token; with a user name instead of a token also
-   `PYPI_USER`). Without it the release is only published on GitHub, and
-   `pip install julialang -f https://github.com/mohammadraziei/julialang/releases/latest` still works.
+4. PyPI (optional): add the repository secret `PYPI_PASS` (an API token; for a new project use a token with the scope
+   of the whole account) under Settings → Secrets and variables → Actions. Secrets are per repository, so those of
+   another repo do not apply. `PYPI_USER` is only needed for a non-token login and must be `__token__` when
+   `PYPI_PASS` is a token. Every release then uploads itself; without the secret the release job prints a warning and
+   skips the upload. To publish a release that already exists, run the **Publish to PyPI** workflow (input: the tag,
+   empty = latest). `pip install julialang -f https://github.com/mohammadraziei/julialang/releases/latest` works
+   without PyPI.
 
 ## Notes
 
