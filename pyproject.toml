@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "julialang"
 # Maintained by CI (tools/release.py). This is the package version; Julia versions are managed at run time.
-version = "0.0.1"
+version = "0.0.2"
 description = "Install and switch Julia versions from pip: a tiny wheel plus a GitHub-mirrored copy of the official binaries."
 readme = "README.md"
 requires-python = ">=3.9"

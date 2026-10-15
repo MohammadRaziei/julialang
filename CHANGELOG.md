@@ -2,6 +2,10 @@
 
 Written automatically by CI (`tools/release.py`) for every release.
 
+## [0.0.2] - 2026-10-15
+
+- chore(docs): update workflow sync job comments and defaults for full archive mirroring
+
 ## [0.0.1] - 2026-10-14
 
 - Bundled Julia: **1.13.1**

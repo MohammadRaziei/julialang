@@ -20,7 +20,7 @@ downloaded on demand by the `julialang` command, so you need no access to julial
 you can keep several Julia versions side by side and switch between them.
 
 <!-- release:start -->
-**Latest release:** [v0.0.1](https://github.com/MohammadRaziei/julialang/releases/tag/v0.0.1) · [changelog](CHANGELOG.md)
+**Latest release:** [v0.0.2](https://github.com/MohammadRaziei/julialang/releases/tag/v0.0.2) · [changelog](CHANGELOG.md)
 <!-- release:end -->
 
 ## Installation
