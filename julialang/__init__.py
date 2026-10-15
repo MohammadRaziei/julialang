@@ -1,4 +1,4 @@
-"""julialang: Julia bundled in a wheel, plus a small version manager."""
+"""julialang: `pip install julialang`, then `julialang install` and run `julia`."""
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
@@ -10,6 +10,6 @@ except PackageNotFoundError:  # running from a source checkout
 
 def julia_executable() -> str:
     """Path of the Julia executable that the `julia` command would run."""
-    from . import manager
+    from . import _state
 
-    return str(manager.exe_in(manager.resolve_root()))
+    return str(_state.exe_in(_state.resolve_root()))

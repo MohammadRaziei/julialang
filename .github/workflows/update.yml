@@ -1,16 +1,19 @@
 name: Sync Julia binaries
 
-# Crawls julialang.org, mirrors new Julia archives to the `__download__` prerelease and pushes julia-list.json.
+# Crawls julialang.org and mirrors every Julia archive to the `__download__` prerelease (and `__download_2__` ...
+# when one release fills up). julia-list.json is NOT committed: it is an asset of `__download__`, re-uploaded after
+# every version, so clients always read the current list from the release.
 #
-# Runs on every push to master, weekly, and by hand. Julia ships a patch release every month or two and a minor
-# release about once a year, so the weekly check is cheap: it exits at once when nothing is new.
+# Runs on every push to master, weekly, and by hand. Julia ships a patch release every month or two, so the weekly
+# check is cheap: it exits at once when nothing is new. The first run mirrors every version ever released, which
+# takes many hours: the job stops cleanly before the 6 h limit and starts itself again until nothing is left.
 # GitHub pauses scheduled workflows after 60 days without repository activity; re-enable it in the Actions tab
 # (or run this workflow by hand) if that ever happens.
 #
 # The last step ALWAYS dispatches wheels.yml (unless this is a dry run), also when nothing was new or the sync
-# failed half-way. wheels.yml decides by itself (tools/release.py plan) whether there is anything to release, so an
-# extra dispatch costs a few seconds. (A push made with GITHUB_TOKEN cannot start other workflows, but
-# workflow_dispatch can.)
+# failed half-way. wheels.yml decides by itself (tools/release.py plan) whether the package needs a release, and its
+# smoke test installs Julia from the mirror on every OS, so each sync also checks the mirror's health.
+# (A push made with GITHUB_TOKEN cannot start other workflows, but workflow_dispatch can.)
 on:
   push:
     branches: [master]
@@ -19,8 +22,8 @@ on:
   workflow_dispatch:
     inputs:
       min_version:
-        description: "Oldest Julia version to mirror"
-        default: "1.10.0"
+        description: "Oldest Julia version to mirror (0.0.0 = all)"
+        default: "0.0.0"
       limit:
         description: "Max versions per run, newest first (0 = all)"
         default: "0"
@@ -30,8 +33,8 @@ on:
         default: false
 
 permissions:
-  contents: write # create the __download__ release, push julia-list.json
-  actions: write # dispatch the wheels workflow
+  contents: write # create the mirror releases and upload assets
+  actions: write # dispatch the wheels workflow and continue a long backfill
 
 concurrency:
   group: sync-julia
@@ -39,11 +42,10 @@ concurrency:
 
 jobs:
   sync:
-    # Do not react to the commits CI makes itself (that would loop).
+    # Do not react to the commits CI makes itself.
     if: >-
       github.event_name != 'push' ||
-      (!startsWith(github.event.head_commit.message, 'chore: mirror Julia') &&
-       !startsWith(github.event.head_commit.message, 'chore(release):'))
+      !startsWith(github.event.head_commit.message, 'chore(release):')
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
@@ -54,37 +56,27 @@ jobs:
           python-version: "3.12"
 
       - name: Mirror new Julia versions
+        id: sync
         env:
           GH_TOKEN: ${{ github.token }}
-          MIN_VERSION: ${{ inputs.min_version || '1.10.0' }}
+          MIN_VERSION: ${{ inputs.min_version || '0.0.0' }}
           LIMIT: ${{ inputs.limit || '0' }}
           DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
         run: |
-          extra=""
+          extra="--upload"
           if [ "$DRY_RUN" = "true" ]; then extra="--dry-run"; fi
-          python tools/sync.py --upload --min-version "$MIN_VERSION" --limit "$LIMIT" $extra
+          python tools/sync.py $extra --min-version "$MIN_VERSION" --limit "$LIMIT" --max-minutes 330
 
-      # Runs even if the sync failed half-way, so the versions that did get uploaded are recorded.
-      - name: Commit julia-list.json
-        id: commit
-        if: ${{ always() }}
-        run: |
-          if git diff --quiet -- julia-list.json; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          latest=$(jq -r .latest julia-list.json)
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add julia-list.json
-          git commit -m "chore: mirror Julia (latest: $latest)"
-          git pull --rebase origin "${{ github.ref_name }}"
-          git push origin "HEAD:${{ github.ref_name }}"
-          echo "changed=true" >> "$GITHUB_OUTPUT"
+      # The backfill did not fit in one job: queue another run (it waits for this one to finish).
+      - name: Continue the backfill
+        if: ${{ always() && steps.sync.outputs.more == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update.yml --ref "${{ github.ref_name }}"
 
-      # Always, so the release logic runs after every sync (it skips itself when there is nothing to release).
+      # Always, so the release logic and the mirror smoke test run after every sync.
       - name: Start the wheels workflow
-        if: ${{ always() && inputs.dry_run != true }}
+        if: ${{ always() && inputs.dry_run != true && steps.sync.outputs.more != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run wheels.yml --ref "${{ github.ref_name }}"

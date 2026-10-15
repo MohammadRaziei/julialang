@@ -1,173 +1,243 @@
-"""`julialang` command: see what is installed, what is new, and switch the default Julia."""
+"""`julialang` command: install, switch and remove the Julia versions that the `julia` command runs."""
 from __future__ import annotations
 
 import argparse
 import sys
 
+from . import _state as S
 from . import manager as M
 
 NEWEST_SHOWN = 12
 
 
-def _remote() -> dict:
+def _spec(words: list[str] | None) -> str:
+    """Words of the command line joined like pip does: `">=1.10" "<1.13"` -> '>=1.10,<1.13'. Empty = latest."""
+    return ",".join(words) if words else "latest"
+
+
+def _check_spec(spec: str) -> None:
     try:
-        return M.fetch_list()
-    except Exception as e:  # network, DNS, bad JSON ...
-        M.die(f"cannot read the mirror list ({M.list_url()}): {e}")
+        S.parse_spec(spec)
+    except S.SpecError as e:
+        S.die(str(e))
 
 
-def _tags(v: str, active: str | None) -> str:
-    tags = []
-    if v == active:
-        tags.append("default")
-    if v == M.bundled_version():
-        tags.append("bundled")
-    return f"  ({', '.join(tags)})" if tags else ""
+def _pick(spec: str, lst: dict) -> str:
+    """Newest version on the mirror (for this platform) that satisfies the spec."""
+    _check_spec(spec)
+    v = S.resolve(spec, M.available_versions(lst))
+    if not v:
+        S.die(f"no Julia matching '{spec}' on the mirror for {M.platform_key()}")
+    return v
+
+
+def _tag(v: str, default: str | None) -> str:
+    return "  (default)" if v == default else ""
+
+
+def _make_default(version: str, was: str | None = None) -> None:
+    S.set_default(version)
+    print(f"Julia {version} is now the default" + (f" (was {was})" if was and was != version else ""))
+
+
+def _replace(target: str, lst: dict, current: str | None) -> None:
+    """Install `target`, make it the default and only then delete the previous default."""
+    M.install(target, lst)
+    _make_default(target, current)
+    if current and current != target:
+        try:
+            M.uninstall(current)
+            print(f"Removed Julia {current}")
+        except SystemExit as e:  # the new Julia is already usable; do not fail the whole command
+            print(f"could not remove Julia {current}: {e}", file=sys.stderr)
+
+
+# --------------------------------------------------------------------------- commands
 
 
 def cmd_status(a) -> int:
     key = M.platform_key()
-    active, bundled = M.active_version(), M.bundled_version()
-    local = M.local_versions()
-    print(f"{'platform':<18}{key}")
-    print(f"{'bundled':<18}{bundled or '-'}")
-    print(f"{'installed':<18}{', '.join(local) or '-'}")
-    print(f"{'default':<18}{active or '-'}")
-    try:
-        lst = M.fetch_list()
-        latest = M.match("latest", M.available_versions(lst, key))
-    except Exception as e:
-        print(f"{'latest':<18}unknown (could not reach the mirror: {e})")
-        return 0
-    print(f"{'latest':<18}{latest or '-'}")
-    if latest and (active is None or M.parse(latest) > M.parse(active)):
-        print(f"\nUpdate available: run `julialang upgrade` to install {latest} and make it the default.")
+    installed = S.sync_config()
+    default = S.default_version()
+    print(f"{'platform':<12}{key}")
+    print(f"{'home':<12}{S.home()}")
+    print(f"{'installed':<12}{', '.join(reversed(installed)) or '-'}")
+    print(f"{'default':<12}{default or '-'}")
+    lst = M.get_list(strict=False)
+    latest = S.resolve("latest", M.available_versions(lst)) if lst else None
+    print(f"{'latest':<12}{latest or 'unknown'}")
+    if not installed:
+        print("\nNo Julia installed yet: run `julialang install`.")
+    elif latest and default and S.parse_version(latest) > S.parse_version(default):
+        print(f"\nUpdate available: run `julialang upgrade` to switch from {default} to {latest}.")
     return 0
 
 
 def cmd_list(a) -> int:
-    key = M.platform_key()
-    active = M.active_version()
+    default = S.default_version()
+    installed = S.sync_config()
     print("Installed:")
-    for v in sorted(M.local_versions(), key=M.parse, reverse=True):
-        print(f"  {v}{_tags(v, active)}")
-    if not M.local_versions():
+    for v in reversed(installed):
+        print(f"  {v}{_tag(v, default)}")
+    if not installed:
         print("  (none)")
+    if a.installed:
+        return 0
+    lst = M.get_list(strict=False)
+    if lst is None:
+        return 0
+    avail = sorted(M.available_versions(lst), key=S.parse_version, reverse=True)
     print("\nOn the mirror:")
-    avail = sorted(M.available_versions(_remote(), key), key=M.parse, reverse=True)
     for v in avail if a.all else avail[:NEWEST_SHOWN]:
-        mark = "  [installed]" if v in M.local_versions() else ""
-        print(f"  {v}{mark}")
+        print(f"  {v}{'  [installed]' if v in installed else ''}")
     if not a.all and len(avail) > NEWEST_SHOWN:
         print(f"  ... {len(avail) - NEWEST_SHOWN} older versions (use --all)")
     return 0
 
 
-def _remote_version(spec: str, lst: dict) -> str:
-    v = M.match(spec, M.available_versions(lst, M.platform_key()))
-    if not v:
-        M.die(f"no Julia matching '{spec}' on the mirror for {M.platform_key()}")
-    return v
-
-
-def cmd_install(a) -> int:
-    lst = _remote()
-    v = _remote_version(a.version, lst)
-    M.install(v, lst)
-    if a.use:
-        M.set_default(v)
-        print(f"Julia {v} is now the default")
-    return 0
-
-
-def cmd_use(a) -> int:
-    if a.version == "bundled":
-        v = M.bundled_version() or M.die("this install has no bundled Julia")
-    else:
-        v = None if a.version in ("latest", "stable") else M.match(a.version, M.local_versions())
-        if v is None:  # not available locally: fetch it
-            lst = _remote()
-            v = _remote_version(a.version, lst)
-            if v not in M.local_versions():
-                M.install(v, lst)
-    M.set_default(v)
-    print(f"Julia {v} is now the default")
-    return 0
-
-
-def cmd_upgrade(a) -> int:
-    lst = _remote()
-    target = _remote_version(a.version or "latest", lst)
-    current = M.active_version()
-    if not a.version and current and M.parse(current) >= M.parse(target):
-        print(f"Already up to date (Julia {current}).")
-        return 0
-    if target not in M.local_versions():
-        M.install(target, lst)
-    M.set_default(target)
-    print(f"Julia {target} is now the default" + (f" (was {current})" if current else ""))
-    return 0
-
-
-def cmd_downgrade(a) -> int:
-    if a.version:
-        return cmd_use(a)
-    current = M.active_version() or M.die("no default Julia to downgrade from")
-    lst = _remote()
-    older = [v for v in M.available_versions(lst, M.platform_key()) if M.parse(v) < M.parse(current)]
-    if not older:
-        M.die(f"nothing older than {current} on the mirror")
-    target = older[-1]
-    if target not in M.local_versions():
-        M.install(target, lst)
-    M.set_default(target)
-    print(f"Julia {target} is now the default (was {current})")
-    return 0
-
-
-def cmd_remove(a) -> int:
-    M.remove(a.version)
-    print(f"Removed Julia {a.version}")
-    return 0
-
-
-def cmd_which(a) -> int:
-    print(M.exe_in(M.resolve_root()))
+def cmd_fetch(a) -> int:
+    lst = M.get_list(fresh=True)
+    avail = M.available_versions(lst)
+    latest = S.resolve("latest", avail)
+    print(f"Mirror list refreshed: {len(avail)} versions for {M.platform_key()}, latest {latest or '-'}"
+          f" (list updated {lst.get('updated') or 'unknown'})")
     return 0
 
 
 def cmd_latest(a) -> int:
-    v = M.match("latest", M.available_versions(_remote(), M.platform_key()))
-    print(v or "-")
+    lst = M.get_list()
+    print(S.resolve("latest", M.available_versions(lst)) or "-")
     return 0
 
 
+def cmd_install(a) -> int:
+    spec = _spec(a.spec)
+    _check_spec(spec)
+    lst = M.get_list(fresh=True)
+    v = _pick(spec, lst)
+    M.install(v, lst)
+    S.sync_config()
+    if a.no_default:
+        print(f"Julia {v} installed")
+    else:
+        _make_default(v, S.default_version())
+    return 0
+
+
+def cmd_uninstall(a) -> int:
+    spec = _spec(a.spec)
+    _check_spec(spec)
+    hits = S.matching(spec, S.sync_config())
+    if not hits:
+        S.die(f"no installed Julia matches '{spec}' (installed: {', '.join(S.installed_versions()) or 'none'})")
+    if len(hits) > 1 and not a.yes:
+        print("This will remove: " + ", ".join(reversed(hits)))
+        if not sys.stdin.isatty():
+            S.die("refusing to remove several versions without --yes")
+        if input("Continue? [y/N] ").strip().lower() not in ("y", "yes"):
+            print("Aborted")
+            return 1
+    for v in hits:
+        M.uninstall(v)
+        print(f"Removed Julia {v}")
+    return 0
+
+
+def cmd_use(a) -> int:
+    spec = _spec(a.spec)
+    _check_spec(spec)
+    have = S.sync_config()
+    v = S.resolve(spec, have)
+    if not v:
+        S.die(f"no installed Julia matches '{spec}' (installed: {', '.join(have) or 'none'}); run `julialang install {spec}`")
+    _make_default(v, S.default_version())
+    return 0
+
+
+def cmd_upgrade(a) -> int:
+    spec = _spec(a.spec)
+    _check_spec(spec)
+    S.sync_config()
+    lst = M.get_list(fresh=True)
+    target, current = _pick(spec, lst), S.default_version()
+    if current is None:
+        M.install(target, lst)
+        _make_default(target)
+    elif target == current:
+        print(f"Already up to date (Julia {current}).")
+    elif S.parse_version(target) < S.parse_version(current):
+        S.die(f"Julia {target} is older than the default {current}; use `julialang downgrade {spec}`")
+    else:
+        _replace(target, lst, current)
+    return 0
+
+
+def cmd_downgrade(a) -> int:
+    spec = _spec(a.spec)
+    _check_spec(spec)
+    S.sync_config()
+    current = S.default_version() or S.die("there is no default Julia to downgrade from; use `julialang install`")
+    lst = M.get_list(fresh=True)
+    target = _pick(spec, lst)
+    if target == current:
+        print(f"Julia {current} is already the default.")
+    elif S.parse_version(target) > S.parse_version(current):
+        S.die(f"Julia {target} is newer than the default {current}; use `julialang upgrade {spec}`")
+    else:
+        _replace(target, lst, current)
+    return 0
+
+
+def cmd_which(a) -> int:
+    print(S.exe_in(S.resolve_root()))
+    return 0
+
+
+# --------------------------------------------------------------------------- argument parsing
+
+SPEC_HELP = (
+    "version spec: latest, 1.12 (newest 1.12.x), 1.12.4, ==, !=, >=, <=, >, <, ~= and comma-joined combinations "
+    "(quote them: \">=1.10,<1.13\")"
+)
+
+
 def main(argv=None) -> int:
+    from . import __version__
+
     p = argparse.ArgumentParser(
         prog="julialang",
-        description="Manage the Julia that the `julia` command runs. No argument: show status.",
+        description="Install and switch the Julia versions that the `julia` command runs. No command: show status.",
+        epilog="Julia lives in ~/.julialang (override with JULIALANG_HOME). "
+               "JULIALANG_VERSION=<spec> overrides the default for one command.",
     )
+    p.add_argument("--version", action="version", version=f"julialang {__version__}")
     sub = p.add_subparsers(dest="cmd", metavar="COMMAND")
 
-    def add(name, func, help, *args, aliases=()):
-        sp = sub.add_parser(name, help=help, aliases=list(aliases))
-        for flags, kw in args:
-            sp.add_argument(*flags, **kw)
+    def add(name, func, help, *, spec=None, aliases=(), flags=()):
+        sp = sub.add_parser(name, help=help, description=help, aliases=list(aliases))
+        if spec:
+            sp.add_argument("spec", nargs=spec, metavar="SPEC", help=SPEC_HELP)
+        for flag, kw in flags:
+            sp.add_argument(flag, **kw)
         sp.set_defaults(func=func)
 
-    ver = lambda **kw: (("version",), kw)  # noqa: E731
-    add("status", cmd_status, "show bundled / installed / default / latest")
-    add("list", cmd_list, "list installed versions and what the mirror offers",
-        (("--all",), dict(action="store_true", help="show every mirrored version")), aliases=["ls"])
+    add("status", cmd_status, "show what is installed, the default and the latest version")
+    add("list", cmd_list, "list installed versions and what the mirror offers", aliases=["ls"], flags=[
+        ("--all", dict(action="store_true", help="show every mirrored version")),
+        ("--installed", dict(action="store_true", help="only installed versions (no network)")),
+    ])
+    add("fetch", cmd_fetch, "refresh the cached list of mirrored versions")
     add("latest", cmd_latest, "print the newest version on the mirror")
-    add("install", cmd_install, "install a version (e.g. latest, 1.12, 1.12.2)",
-        ver(), (("--use",), dict(action="store_true", help="also make it the default")))
-    add("use", cmd_use, "make a version the default (installs it if needed; 'bundled' = the wheel's copy)", ver())
-    add("upgrade", cmd_upgrade, "install the newest Julia (or a given one) and make it the default",
-        (("version",), dict(nargs="?")))
-    add("downgrade", cmd_downgrade, "default to the next older version (or a given one)",
-        (("version",), dict(nargs="?")))
-    add("remove", cmd_remove, "delete an installed version", ver(), aliases=["rm"])
+    add("install", cmd_install, "install a version without removing others (default: latest) and make it the default",
+        spec="*", flags=[("--no-default", dict(action="store_true", help="install only; keep the current default"))])
+    add("uninstall", cmd_uninstall, "delete installed versions", spec="+", aliases=["remove", "rm"], flags=[
+        ("--yes", dict(action="store_true", help="do not ask before removing several versions")),
+        ("-y", dict(action="store_true", dest="yes", help=argparse.SUPPRESS)),
+    ])
+    add("use", cmd_use, "make an installed version the default", spec="+")
+    add("upgrade", cmd_upgrade, "install a newer version (default: latest), make it the default, remove the old one",
+        spec="*")
+    add("downgrade", cmd_downgrade, "install an older version, make it the default, remove the newer one", spec="+")
     add("which", cmd_which, "print the path of the Julia executable that `julia` runs")
 
     args = p.parse_args(argv)

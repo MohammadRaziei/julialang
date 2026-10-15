@@ -3,6 +3,6 @@ __pycache__/
 build/
 dist/
 .venv/
-julialang/_julia/
-julialang/_bundled.json
-julialang/_symlinks.json
+julia-list.json
+.pytest_cache/
+.ruff_cache/

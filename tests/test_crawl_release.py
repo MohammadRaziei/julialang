@@ -95,59 +95,118 @@ def git(cwd: Path, *args: str, author: str = "human") -> None:
     subprocess.run(["git", "-c", f"user.name={author}", "-c", "user.email=a@b.c", *args], cwd=cwd, check=True, capture_output=True)
 
 
-def write_list(cwd: Path, latest: str, versions: list[str]) -> None:
-    data = {"schema": 1, "repo": "me/julialang", "release_tag": "__download__", "latest": latest,
-            "versions": {v: {"files": {"linux-x86_64": {}}} for v in versions}}
-    (cwd / "julia-list.json").write_text(json.dumps(data))
-
-
 def test_release_flow(tmp_path: Path):
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "x"\nversion = "0.0.0"\n')
     (tmp_path / "README.md").write_text("intro\n<!-- release:start -->\nold\n<!-- release:end -->\noutro\n")
+    (tmp_path / "julialang").mkdir()
+    (tmp_path / "julialang/__init__.py").write_text("")
     git(tmp_path, "init", "-q", "-b", "master")
-    write_list(tmp_path, "1.12.0", ["1.12.0"])
     git(tmp_path, "add", "-A")
 
     # first ever release: no tag yet -> prepare 0.0.1
-    git(tmp_path, "commit", "-qm", "chore: mirror Julia")
+    git(tmp_path, "commit", "-qm", "feat: first version")
     plan = release(tmp_path, "plan")
-    assert (plan["mode"], plan["version"], plan["julia"]) == ("prepare", "0.0.1", "1.12.0")
-    release(tmp_path, "bump", "--version", "0.0.1", "--julia", "1.12.0")
+    assert (plan["mode"], plan["version"]) == ("prepare", "0.0.1") and len(plan["sha"]) == 40
+    release(tmp_path, "bump", "--version", "0.0.1", "--repo", "me/julialang")
     git(tmp_path, "add", "-A")
-    git(tmp_path, "commit", "-qm", "chore(release): v0.0.1 (Julia 1.12.0)", author="github-actions[bot]")
+    git(tmp_path, "commit", "-qm", "chore(release): v0.0.1", author="github-actions[bot]")
 
     # the bot commit is recognised -> release; once tagged -> skip
     assert release(tmp_path, "plan")["mode"] == "release"
     git(tmp_path, "tag", "v0.0.1")
     assert release(tmp_path, "plan")["mode"] == "skip"
 
-    # same bundled Julia (only an older version got mirrored) -> nothing to release, unless forced
-    write_list(tmp_path, "1.12.0", ["1.12.0", "1.11.5"])
-    git(tmp_path, "commit", "-qam", "chore: mirror Julia")
+    # a new Julia (or any non-package change) needs no release; --force still can
+    (tmp_path / "README.md").write_text("intro, edited\n<!-- release:start -->\nold\n<!-- release:end -->\n")
+    git(tmp_path, "commit", "-qam", "docs: tweak README")
     assert release(tmp_path, "plan")["mode"] == "skip"
     assert release(tmp_path, "plan", "--force")["mode"] == "prepare"
 
-    # a new Julia -> prepare 0.0.2 (patch) or 0.1.0 (minor)
-    write_list(tmp_path, "1.12.1", ["1.12.1", "1.12.0", "1.11.5"])
-    git(tmp_path, "commit", "-qam", "chore: mirror Julia")
+    # a package change -> prepare 0.0.2 (patch) or 0.1.0 (minor)
+    (tmp_path / "julialang/cli.py").write_text("x = 1\n")
+    git(tmp_path, "add", "-A")
+    git(tmp_path, "commit", "-qm", "feat: add uninstall")
+    (tmp_path / "julialang/cli.py").write_text("x = 2\n")
+    git(tmp_path, "commit", "-qam", "fix: spec parsing")
+    git(tmp_path, "commit", "-qm", "chore: mirror Julia (latest: 1.13.1)", "--allow-empty")  # bookkeeping: not in the changelog
     assert release(tmp_path, "plan")["version"] == "0.0.2"
     assert release(tmp_path, "plan", "--bump", "minor")["version"] == "0.1.0"
-    release(tmp_path, "bump", "--version", "0.0.2", "--julia", "1.12.1")
-
+    release(tmp_path, "set-version", "0.0.2")
     assert 'version = "0.0.2"' in (tmp_path / "pyproject.toml").read_text()
+    release(tmp_path, "bump", "--version", "0.0.2", "--repo", "me/julialang")
+
     changelog = (tmp_path / "CHANGELOG.md").read_text()
-    assert "## [0.0.2]" in changelog and "**1.12.1** (previously 1.12.0)" in changelog and "Newly mirrored: 1.12.1" in changelog
+    assert "## [0.0.2]" in changelog and "- feat: add uninstall" in changelog and "- fix: spec parsing" in changelog
+    notes = release_notes(tmp_path, "0.0.2")
+    assert "mirror Julia" not in notes and "first version" not in notes  # only commits since the last tag
     readme = (tmp_path / "README.md").read_text()
-    assert "intro" in readme and "outro" in readme and "old" not in readme and "v0.0.2" in readme and "Julia **1.12.1**" in readme
-    assert "Newly mirrored: 1.12.1" in release_notes(tmp_path, "0.0.2")
+    assert "intro, edited" in readme and "old" not in readme and "releases/tag/v0.0.2" in readme
+    assert "fix: spec parsing" in release_notes(tmp_path, "0.0.2")
 
     # a human typing the same commit message is not treated as a release commit
-    git(tmp_path, "commit", "-qam", "chore(release): v0.0.2 (Julia 1.12.1)")
+    git(tmp_path, "commit", "-qam", "chore(release): v0.0.2")
     assert release(tmp_path, "plan")["mode"] != "release"
 
 
 def release_notes(cwd: Path, version: str) -> str:
     return subprocess.run([sys.executable, str(ROOT / "tools/release.py"), "notes", version], cwd=cwd, capture_output=True, text=True, check=True).stdout
+
+
+# --------------------------------------------------------------------------- sync.py: list handling and sharding
+
+
+def test_missing_remote_list_means_empty_but_other_errors_are_fatal(tmp_path: Path):
+    assert sync.fetch_remote_list((tmp_path / "nope.json").as_uri()) is None  # 404-like: first run
+    f = tmp_path / "julia-list.json"
+    f.write_text(json.dumps({"versions": {"1.0.0": {"files": {}}}}))
+    assert sync.load_list(tmp_path / "other.json", "me/r", f.as_uri())["versions"] == {"1.0.0": {"files": {}}}
+    assert sync.load_list(tmp_path / "other.json", "me/r", (tmp_path / "nope.json").as_uri())["versions"] == {}
+    import urllib.error
+
+    import pytest
+
+    def boom(url, retries=4):
+        raise urllib.error.HTTPError(url, 503, "unavailable", None, None)
+
+    original = sync.http_get
+    sync.http_get = boom
+    try:
+        with pytest.raises(urllib.error.HTTPError):  # must NOT be treated as an empty list
+            sync.fetch_remote_list("https://example.invalid/julia-list.json")
+    finally:
+        sync.http_get = original
+
+
+def test_http_get_does_not_retry_client_errors(monkeypatch):
+    import urllib.error
+
+    import pytest
+
+    calls = []
+
+    def fake_urlopen(req, timeout=0):
+        calls.append(1)
+        raise urllib.error.HTTPError(req.full_url, 404, "not found", None, None)
+
+    monkeypatch.setattr(sync.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(sync.time, "sleep", lambda s: None)
+    with pytest.raises(urllib.error.HTTPError):
+        sync.http_get("https://example.invalid/x")
+    assert len(calls) == 1
+
+
+def test_files_overflow_into_the_next_mirror_release(monkeypatch):
+    monkeypatch.setattr(sync, "SHARD_CAP", 2)
+    base = "https://github.com/me/r/releases/download"
+    lst = {"versions": {"1.0.0": {"files": {
+        "linux-x86_64": {"url": f"{base}/__download__/a"}, "macos-aarch64": {"url": f"{base}/__download__/b"},
+    }}}}
+    assert sync.pick_tag(lst) == "__download_2__"
+    lst["versions"]["1.0.1"] = {"files": {"linux-x86_64": {"url": f"{base}/__download_2__/c"}, "macos-aarch64": {"url": f"{base}/__download_2__/d"}}}
+    assert sync.pick_tag(lst) == "__download_3__"
+    sync.finalize(lst)
+    assert lst["release_tags"] == ["__download__", "__download_2__"] and lst["latest"] == "1.0.1"
+    assert sync.pick_tag({"versions": {}}) == "__download__"
 
 
 def test_md5_sha_helper_agrees_with_hashlib(tmp_path: Path):

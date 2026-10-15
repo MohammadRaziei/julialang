@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "julialang"
-# Maintained by CI (tools/release.py); the wheel's own version, not the Julia version it bundles.
+# Maintained by CI (tools/release.py). This is the package version; Julia versions are managed at run time.
 version = "0.0.1"
-description = "Julia in a wheel: pip install julialang, then run `julia`. Includes a small version manager."
+description = "Install and switch Julia versions from pip: a tiny wheel plus a GitHub-mirrored copy of the official binaries."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
@@ -36,7 +36,7 @@ Issues = "https://github.com/mohammadraziei/julialang/issues"
 Changelog = "https://github.com/mohammadraziei/julialang/blob/master/CHANGELOG.md"
 
 [project.scripts]
-julia = "julialang.launcher:main"
+julia = "julialang.julia_cli:main"
 julialang = "julialang.cli:main"
 
 [tool.setuptools.packages.find]

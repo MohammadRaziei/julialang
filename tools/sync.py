@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
-"""Mirror official Julia archives to the `__download__` GitHub prerelease and keep julia-list.json current.
+"""Mirror official Julia archives to GitHub prereleases and keep `julia-list.json` current.
 
 Discovery: by default the script crawls the download pages of julialang.org
 (https://julialang.org/downloads/manual-downloads/ = current stable + LTS, and
 https://julialang.org/downloads/oldreleases/ = everything older). `--source json` uses the official
 versions.json feed instead (handy as a fallback if the page layout ever changes).
 
-For every stable Julia version (>= --min-version) that is not mirrored yet, each archive is downloaded,
-verified against the upstream sha256 (and md5 when upstream publishes one), uploaded to the release with the
-`gh` CLI (--upload) and recorded in julia-list.json with md5 + sha256. Files are deleted right after upload,
-so a full backfill never needs more than one archive of disk space. Nothing is written when nothing is new.
+For every stable Julia version (>= --min-version, default: all) that is not mirrored yet, each archive is
+downloaded, verified against the upstream sha256 (and md5 when upstream publishes one), uploaded to a release with
+the `gh` CLI (--upload) and recorded in julia-list.json with md5 + sha256. Files are deleted right after upload, so
+a full backfill never needs more than one archive of disk space.
+
+julia-list.json is NOT kept in git: it is an asset of the `__download__` release. The existing list is read from
+there (404 = empty), a local untracked working copy is kept, and the list is uploaded again after every version, so
+an interrupted run loses nothing. A GitHub release holds at most ~1000 assets, so after SHARD_CAP files the next
+archives go to `__download_2__`, `__download_3__` ... (each file's `url` in the list says where it is).
+`--max-minutes` stops cleanly before a CI job times out and reports `more=true` so the workflow can run again.
 """
 from __future__ import annotations
 
@@ -23,6 +29,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from html.parser import HTMLParser
@@ -30,7 +37,8 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 DEFAULT_REPO = "mohammadraziei/julialang"
-TAG = "__download__"
+TAG = "__download__"  # first mirror release; also holds julia-list.json
+SHARD_CAP = 900  # archives per mirror release (GitHub allows ~1000 assets per release)
 PAGES = [
     "https://julialang.org/downloads/manual-downloads/",
     "https://julialang.org/downloads/oldreleases/",
@@ -54,8 +62,9 @@ CHECKSUM_LINE = re.compile(r"^([0-9a-fA-F]{32,64})\s+\*?(\S+)\s*$")
 VERSION_RE = re.compile(r"\d+\.\d+\.\d+")
 NOTES = (
     "Mirror of the official Julia binaries (from julialang.org), used by the `julialang` Python package.\n"
-    "Managed by CI - do not edit by hand. The file list with md5/sha256 is `julia-list.json`."
+    "Managed by CI - do not edit by hand. The file list with md5/sha256 is `julia-list.json` (in `__download__`)."
 )
+DOWNLOAD_URL_TAG = re.compile(r"/releases/download/([^/]+)/")
 
 
 def vkey(v: str) -> tuple:
@@ -71,6 +80,10 @@ def http_get(url: str, retries: int = 4) -> bytes:
             req = urllib.request.Request(url, headers={"User-Agent": "julialang-mirror"})
             with urllib.request.urlopen(req, timeout=60) as r:
                 return r.read()
+        except urllib.error.HTTPError as e:
+            if 400 <= e.code < 500 or i == retries - 1:  # a client error will not fix itself
+                raise
+            time.sleep(3 * (i + 1))
         except Exception:
             if i == retries - 1:
                 raise
@@ -240,18 +253,79 @@ def gh(*args: str, check: bool = True, quiet: bool = False) -> subprocess.Comple
     return subprocess.run(["gh", *args], check=check, stdout=out, stderr=out)
 
 
-def ensure_release(repo: str) -> None:
-    if gh("release", "view", TAG, "--repo", repo, check=False, quiet=True).returncode == 0:
+def ensure_release(repo: str, tag: str, ready: set[str]) -> None:
+    if tag in ready:
         return
-    gh("release", "create", TAG, "--repo", repo, "--title", "Julia binaries (mirror)", "--notes", NOTES, "--prerelease")
+    if gh("release", "view", tag, "--repo", repo, check=False, quiet=True).returncode != 0:
+        title = "Julia binaries (mirror)" if tag == TAG else f"Julia binaries (mirror, part {tag.strip('_').split('_')[-1]})"
+        gh("release", "create", tag, "--repo", repo, "--title", title, "--notes", NOTES, "--prerelease", "--latest=false")
+    ready.add(tag)
 
 
-def load_list(path: Path, repo: str) -> dict:
-    if path.exists():
+def shard_tag(n: int) -> str:
+    return TAG if n == 1 else f"__download_{n}__"
+
+
+def asset_base(repo: str, tag: str) -> str:
+    return f"https://github.com/{repo}/releases/download/{tag}"
+
+
+def tags_in_use(lst: dict) -> dict[str, int]:
+    """How many mirrored files each release tag holds, going by the urls recorded in the list."""
+    counts: dict[str, int] = {}
+    for meta in lst["versions"].values():
+        for f in meta["files"].values():
+            m = DOWNLOAD_URL_TAG.search(f.get("url", ""))
+            if m:
+                counts[m.group(1)] = counts.get(m.group(1), 0) + 1
+    return counts
+
+
+def pick_tag(lst: dict) -> str:
+    """The first mirror release that still has room (GitHub allows ~1000 assets per release)."""
+    counts, n = tags_in_use(lst), 1
+    while counts.get(shard_tag(n), 0) >= SHARD_CAP:
+        n += 1
+    return shard_tag(n)
+
+
+def empty_list(repo: str) -> dict:
+    return {"schema": 1, "repo": repo, "release_tag": TAG, "release_tags": [TAG], "latest": None, "updated": None, "versions": {}}
+
+
+def fetch_remote_list(url: str) -> dict | None:
+    """The list published as a release asset. None when it does not exist yet; any other failure is fatal,
+    because carrying on with an empty list would re-mirror everything and overwrite the real one."""
+    try:
+        return json.loads(http_get(url))
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+    except urllib.error.URLError as e:
+        if isinstance(e.reason, FileNotFoundError):  # file:// URL (tests)
+            return None
+        raise
+
+
+def load_list(path: Path, repo: str, list_url: str | None) -> dict:
+    """The existing list: from the release asset when `list_url` is given, else from the local working copy."""
+    lst = None
+    if list_url:
+        lst = fetch_remote_list(list_url)
+        print(f"Existing list: {'found at ' + list_url if lst is not None else 'none yet (first run)'}")
+    elif path.exists():
         lst = json.loads(path.read_text())
-        lst.setdefault("versions", {})
-        return lst
-    return {"schema": 1, "repo": repo, "release_tag": TAG, "latest": None, "updated": None, "versions": {}}
+    if lst is None:
+        return empty_list(repo)
+    lst.setdefault("versions", {})
+    return lst
+
+
+def finalize(lst: dict) -> None:
+    lst["latest"] = max(lst["versions"], key=vkey) if lst["versions"] else None
+    lst["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    lst["release_tags"] = sorted(tags_in_use(lst), key=lambda t: (t != TAG, t)) or [TAG]
 
 
 def write_list(lst: dict, path: Path) -> None:
@@ -262,6 +336,19 @@ def write_list(lst: dict, path: Path) -> None:
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(json.dumps(lst, indent=2) + "\n")
     tmp.replace(path)
+
+
+def publish_list(lst: dict, a: argparse.Namespace, repo: str) -> None:
+    """Write the working copy and put it where clients read it: the `__download__` release (and --keep-dir)."""
+    finalize(lst)
+    write_list(lst, a.list_file)
+    if a.keep_dir:
+        shutil.copy2(a.list_file, a.keep_dir / "julia-list.json")
+    if a.upload:
+        with tempfile.TemporaryDirectory() as td:  # the asset name must be julia-list.json whatever the local name
+            asset = Path(td) / "julia-list.json"
+            shutil.copy2(a.list_file, asset)
+            gh("release", "upload", TAG, str(asset), "--clobber", "--repo", repo)
 
 
 def plan(catalog: dict, lst: dict, min_version: str, limit: int) -> list[tuple[str, dict]]:
@@ -277,26 +364,36 @@ def plan(catalog: dict, lst: dict, min_version: str, limit: int) -> list[tuple[s
     return todo[:limit] if limit else todo
 
 
+def set_output(name: str, value: str) -> None:
+    out = os.environ.get("GITHUB_OUTPUT")
+    if out:
+        with open(out, "a") as f:
+            f.write(f"{name}={value}\n")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--source", choices=["crawl", "json"], default="crawl", help="how to discover versions")
     ap.add_argument("--crawl-url", action="append", help=f"page to crawl, repeatable (default: {', '.join(PAGES)})")
     ap.add_argument("--checksums-base", default=CHECKSUMS_BASE, help="where julia-<version>.sha256/.md5 live")
     ap.add_argument("--upstream", default=os.environ.get("JULIA_VERSIONS_URL", VERSIONS_JSON), help="versions.json URL (--source json)")
-    ap.add_argument("--list-file", default="julia-list.json", type=Path)
+    ap.add_argument("--list-file", default="julia-list.json", type=Path, help="local working copy of the list (not tracked by git)")
+    ap.add_argument("--list-url", help="where to read the existing list (default with --upload/--dry-run: the __download__ release asset)")
     ap.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY"), help="owner/name (default: $GITHUB_REPOSITORY)")
-    ap.add_argument("--min-version", default="1.10.0", help="oldest Julia version to mirror (default: 1.10.0)")
+    ap.add_argument("--min-version", default="0.0.0", help="oldest Julia version to mirror (default: 0.0.0 = all)")
     ap.add_argument("--limit", type=int, default=0, help="max versions per run, newest first (0 = all)")
-    ap.add_argument("--upload", action="store_true", help=f"upload assets to the {TAG} release with `gh`")
+    ap.add_argument("--max-minutes", type=float, default=0, help="stop cleanly after this long (0 = no limit); prints more=true")
+    ap.add_argument("--upload", action="store_true", help="upload assets to the mirror releases with `gh`")
     ap.add_argument("--dry-run", action="store_true", help="only print what would be mirrored")
-    ap.add_argument("--base-url", help="asset URL prefix recorded in the list (default: the GitHub release)")
-    ap.add_argument("--keep-dir", type=Path, help="also copy downloaded assets here (debugging / tests)")
+    ap.add_argument("--base-url", help="asset URL prefix recorded in the list (default: the GitHub releases); disables sharding")
+    ap.add_argument("--keep-dir", type=Path, help="also copy downloaded assets and the list here (debugging / tests)")
     a = ap.parse_args()
 
-    lst = load_list(a.list_file, a.repo or DEFAULT_REPO)
-    repo = a.repo or lst.get("repo") or DEFAULT_REPO
+    repo = a.repo or DEFAULT_REPO
+    list_url = a.list_url or (f"{asset_base(repo, TAG)}/julia-list.json" if (a.upload or a.dry_run) else None)
+    lst = load_list(a.list_file, repo, list_url)
     lst["repo"], lst["release_tag"] = repo, TAG
-    base = (a.base_url or f"https://github.com/{repo}/releases/download/{TAG}").rstrip("/")
+    set_output("more", "false")
 
     catalog = crawl_catalog(a.crawl_url or PAGES) if a.source == "crawl" else json_catalog(json.loads(http_get(a.upstream)))
     todo = plan(catalog, lst, a.min_version, a.limit)
@@ -308,29 +405,41 @@ def main() -> int:
     if a.dry_run:
         return 0
 
+    ready: set[str] = set()
     if a.upload:
-        ensure_release(repo)
+        ensure_release(repo, TAG, ready)  # julia-list.json always lives here
     if a.keep_dir:
         a.keep_dir.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + a.max_minutes * 60 if a.max_minutes else None
 
-    changed = False
+    changed = published = False
+    stopped = False
     failures: list[str] = []
     try:
         with tempfile.TemporaryDirectory() as td:
             for ver, files in todo:
+                if deadline and time.monotonic() > deadline:
+                    stopped = True
+                    break
                 if a.source == "crawl":
                     add_checksums(ver, files, a.checksums_base.rstrip("/"))
+                ver_changed = False
                 for key, f in sorted(files.items()):
+                    if deadline and time.monotonic() > deadline:
+                        stopped = True
+                        break
                     if not f.get("sha256"):
                         print(f"[{ver}] {key}: no upstream sha256 found, not mirroring an unverifiable file", file=sys.stderr)
                         continue
                     name = f"julia-{ver}-{key}.{f['ext']}"
                     path = Path(td) / name
-                    print(f"[{ver}] {name}", flush=True)
+                    tag = TAG if a.base_url else pick_tag(lst)
+                    print(f"[{ver}] {name} -> {tag}", flush=True)
                     try:  # one bad file must not stop the rest; it is retried by the next run
                         sha, md5, size = download(f["url"], path, f["sha256"], f.get("md5"))
                         if a.upload:
-                            gh("release", "upload", TAG, str(path), "--clobber", "--repo", repo)
+                            ensure_release(repo, tag, ready)
+                            gh("release", "upload", tag, str(path), "--clobber", "--repo", repo)
                         if a.keep_dir:
                             shutil.copy2(path, a.keep_dir / name)
                     except Exception as e:
@@ -339,6 +448,7 @@ def main() -> int:
                         continue
                     finally:
                         path.unlink(missing_ok=True)
+                    base = a.base_url.rstrip("/") if a.base_url else asset_base(repo, tag)
                     lst["versions"].setdefault(ver, {"files": {}})["files"][key] = {
                         "name": name,
                         "url": f"{base}/{name}",
@@ -346,15 +456,19 @@ def main() -> int:
                         "md5": md5,
                         "sha256": sha,
                     }
-                    changed = True
+                    changed = ver_changed = True
                     write_list(lst, a.list_file)  # progress survives a crash
+                if ver_changed:  # publish after every version so clients see it and a crash loses nothing
+                    publish_list(lst, a, repo)
+                    published = True
+                if stopped:
+                    break
     finally:
-        if changed:
-            lst["latest"] = max(lst["versions"], key=vkey)
-            lst["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-            write_list(lst, a.list_file)
-            if a.upload:
-                gh("release", "upload", TAG, str(a.list_file), "--clobber", "--repo", repo)
+        if changed and not published:
+            publish_list(lst, a, repo)
+    if stopped:
+        print("Time budget reached; more versions remain and the next run continues.", file=sys.stderr)
+        set_output("more", "true")
     if failures:
         print(f"{len(failures)} file(s) failed and will be retried next run: {', '.join(failures)}", file=sys.stderr)
         return 1
