@@ -314,7 +314,9 @@ def main(argv=None) -> int:
     add("which", cmd_which, "print the path of the Julia executable that `julia` runs")
 
     args = p.parse_args(argv)
-    if not args.cmd:
+    if not args.cmd:  # bare `julialang`: say what this is, then show the status
+        print(f"julialang {__version__}: a cross-platform Julia version manager built on pip and GitHub; "
+              "its mirror follows the latest releases on julialang.org.\n")
         return cmd_status(args)
     return args.func(args) or 0
 

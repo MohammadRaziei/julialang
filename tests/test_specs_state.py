@@ -203,3 +203,14 @@ def test_version_flags(flag, capsys):
         cli.main([flag])
     assert e.value.code == 0
     assert capsys.readouterr().out.strip() == f"julialang {__version__}"
+
+
+def test_bare_julialang_introduces_itself_before_the_status(home, capsys):
+    from julialang import __version__
+
+    assert cli.main([]) == 0
+    out = capsys.readouterr().out
+    assert out.startswith(f"julialang {__version__}: a cross-platform Julia version manager built on pip and GitHub")
+    assert "julialang.org" in out.splitlines()[0] and "platform" in out and "installed" in out
+    assert cli.main(["status"]) == 0
+    assert "cross-platform" not in capsys.readouterr().out  # the explicit command stays plain
