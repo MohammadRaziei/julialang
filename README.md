@@ -33,8 +33,13 @@ pip install julialang && julialang install && julia
 
 ## Why julialang?
 
+On machines where you have no `sudo`/admin rights, or where the network only reaches PyPI and GitHub (a locked-down
+server, a CI runner, the sandbox of Claude chat), you cannot run an installer, `apt` or `juliaup`, and julialang.org is
+blocked. `pip install julialang` fixes that: it needs nothing but `pip`, installs Julia in your home directory from
+GitHub, and works the same on Linux, macOS and Windows. As far as we know there is no other simple way to get Julia there.
+
 Like [`ziglang`](https://pypi.org/project/ziglang/) does for Zig, `julialang` makes Julia installable from Python
-tooling.
+tooling. What you get:
 
 - **Tiny wheel.** `pip install julialang` downloads a pure-Python wheel of a few KB (`py3-none-any`), the same on every platform.
 - **No julialang.org needed.** The official binaries are mirrored on GitHub by CI; `julialang` downloads from there and verifies sha256 and md5.
