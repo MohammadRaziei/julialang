@@ -66,6 +66,35 @@ def save_config(cfg: dict) -> None:
     tmp.replace(path)
 
 
+# Settings of config.json that the user may change with `julialang config`: CLI name -> (JSON key, default)
+SETTINGS = {"disable-pkg-server": ("disable_pkg_server", True)}
+
+
+def get_setting(name: str) -> bool:
+    key, default = SETTINGS[name]
+    value = load_config().get(key, default)
+    return value if isinstance(value, bool) else default
+
+
+def set_setting(name: str, value: bool) -> None:
+    cfg = load_config()
+    cfg[SETTINGS[name][0]] = value
+    save_config(cfg)
+
+
+def julia_env() -> dict[str, str]:
+    """Environment for Julia. On networks that only reach PyPI and GitHub, pkg.julialang.org is blocked and `Pkg.add` fails,
+    so unless the user decided otherwise Julia runs with JULIA_PKG_SERVER="" (Pkg then uses GitHub through git).
+
+    A JULIA_PKG_SERVER that is already set, even to an empty string, is the user's explicit choice and is never touched;
+    otherwise the `disable_pkg_server` setting of config.json decides (default: true).
+    """
+    env = dict(os.environ)
+    if "JULIA_PKG_SERVER" not in env and get_setting("disable-pkg-server"):
+        env["JULIA_PKG_SERVER"] = ""
+    return env
+
+
 def _rel(path: Path) -> str:
     try:
         return path.relative_to(home()).as_posix()

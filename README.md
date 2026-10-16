@@ -23,7 +23,7 @@ pip install julialang && julialang install && julia
 - [Why julialang?](#why-julialang)
 - [Quick start](#quick-start)
 - [Everyday use](#everyday-use)
-  - [Install Julia](#install-julia) · [Run Julia](#run-julia) · [See what you have](#see-what-you-have) · [Switch version](#switch-version) · [Pin a version per project](#pin-a-version-per-project) · [Upgrade and downgrade](#upgrade-and-downgrade) · [Remove versions](#remove-versions) · [Remove everything](#remove-everything)
+  - [Install Julia](#install-julia) · [Run Julia](#run-julia) · [See what you have](#see-what-you-have) · [Switch version](#switch-version) · [Pin a version per project](#pin-a-version-per-project) · [Julia packages on restricted networks](#julia-packages-on-restricted-networks) · [Upgrade and downgrade](#upgrade-and-downgrade) · [Remove versions](#remove-versions) · [Remove everything](#remove-everything)
 - [Version specs](#version-specs)
 - [Command reference](#command-reference)
 - [Environment variables](#environment-variables)
@@ -144,6 +144,28 @@ the current directory upwards (the `~/.julialang` *directory* that holds your in
 Order of precedence: `JULIALANG_VERSION` > `.julialang` > the default (`julialang use`) > the newest installed version.
 A pin never downloads anything: if no installed version matches, `julia` stops and tells you to run `julialang install SPEC`.
 
+### Julia packages on restricted networks
+
+Installing Julia is only half of it: `Pkg.add` normally downloads packages from `pkg.julialang.org`, which is blocked on the
+same machines where you need `julialang` (only PyPI and GitHub are reachable). So `julia` (and `julialang run`) starts Julia
+with `JULIA_PKG_SERVER=""` by default: Pkg then clones the registry and downloads packages straight from GitHub.
+
+```bash
+julia -e 'using Pkg; Pkg.add("JSON")'      # works with nothing but GitHub reachable
+```
+
+The first `Pkg.add` clones the whole General registry and precompiles what it installs, so it takes a while; packages are
+fast afterwards. On a normal network the package server is quicker, so you can turn this off:
+
+```bash
+julialang config                           # show the settings
+julialang config disable-pkg-server false  # let Julia use pkg.julialang.org again
+julialang config disable-pkg-server true   # the default
+```
+
+The setting lives in `~/.julialang/config.json` (`"disable_pkg_server"`, default `true`). A `JULIA_PKG_SERVER` that is already set
+in your environment, even to an empty string, is your explicit choice: `julialang` never touches it and the setting is ignored.
+
 ### Upgrade and downgrade
 
 `install` keeps old versions; `upgrade` and `downgrade` **replace** the current default:
@@ -217,6 +239,7 @@ commas, so `julialang install ">=1.10" "<1.13"` means the same as `julialang ins
 | `julialang self-uninstall [--yes]` | `purge`, then `pip uninstall julialang` |
 | `julialang run [ARGS...]` | run the selected Julia with `ARGS`: the same as the `julia` command (also `python -m julialang run ...`) |
 | `julialang pin [SPEC] [--remove]` | pin a version for this project in a `.julialang` file; without a spec, show the pin |
+| `julialang config [NAME [VALUE]]` | show or change settings; for now `disable-pkg-server` (default `true`: Julia runs with `JULIA_PKG_SERVER=""`) |
 | `julialang which` | path of the executable `julia` runs |
 | `julialang -v`, `julialang --version` | version of this package |
 
@@ -230,6 +253,7 @@ and `fetch` always try the network first and fall back to the cache when offline
 | `JULIALANG_HOME` | where versions, `config.json` and the cache live (default `~/.julialang`) |
 | `JULIALANG_VERSION` | spec of an installed version that `julia` should run, instead of the default |
 | `JULIALANG_AUTO_INSTALL=1` | let `julia` install the latest version on first use |
+| `JULIA_PKG_SERVER` | Julia's own variable. If set (even empty), `julialang` leaves it alone; otherwise `julia` sets it to empty unless `disable-pkg-server` is `false` |
 | `JULIALANG_REPO` | GitHub repository to read the mirror from (default `MohammadRaziei/julialang`) |
 | `JULIALANG_LIST_URL` | full URL of `julia-list.json`, overriding `JULIALANG_REPO` (useful for your own mirror or tests) |
 

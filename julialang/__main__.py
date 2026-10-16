@@ -3,6 +3,7 @@ that the `julia` command runs."""
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -279,6 +280,25 @@ def cmd_pin(a) -> int:
     return 0
 
 
+_TRUE, _FALSE = ("1", "true", "yes", "on"), ("0", "false", "no", "off")
+
+
+def cmd_config(a) -> int:
+    """Show or change the settings kept in config.json."""
+    if a.name and a.name not in S.SETTINGS:
+        S.die(f"unknown setting '{a.name}' (available: {', '.join(S.SETTINGS)})")
+    if a.name and a.value is not None:
+        low = a.value.lower()
+        if low not in _TRUE + _FALSE:
+            S.die(f"{a.name} is true or false, not '{a.value}'")
+        S.set_setting(a.name, low in _TRUE)
+    for name in [a.name] if a.name else S.SETTINGS:
+        print(f"{name} = {str(S.get_setting(name)).lower()}")
+    if (a.name or "disable-pkg-server") == "disable-pkg-server" and "JULIA_PKG_SERVER" in os.environ:
+        print(f"note: JULIA_PKG_SERVER is set in this environment ({os.environ['JULIA_PKG_SERVER']!r}); it always wins")
+    return 0
+
+
 def cmd_which(a) -> int:
     print(S.exe_in(S.resolve_root()))
     return 0
@@ -321,6 +341,7 @@ def main(argv=None) -> int:
         for flag, kw in flags:
             sp.add_argument(flag, **kw)
         sp.set_defaults(func=func)
+        return sp
 
     add("status", cmd_status, "show what is installed, the default and the latest version")
     add("list", cmd_list, "list installed versions and what the mirror offers", aliases=["ls"], flags=[
@@ -348,6 +369,9 @@ def main(argv=None) -> int:
     add("pin", cmd_pin, "pin a Julia version for this project in a .julialang file (no spec: show the pin)", spec="*", flags=[
         ("--remove", dict(action="store_true", help="remove the pin of the current directory")),
     ])
+    cfg = add("config", cmd_config, "show or change settings (disable-pkg-server: run Julia with JULIA_PKG_SERVER=\"\", default true)")
+    cfg.add_argument("name", nargs="?", help="setting to show or change")
+    cfg.add_argument("value", nargs="?", help="new value: true or false")
     add("which", cmd_which, "print the path of the Julia executable that `julia` runs")
 
     args = p.parse_args(argv)

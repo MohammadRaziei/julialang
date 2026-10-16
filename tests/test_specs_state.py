@@ -183,8 +183,8 @@ def test_run_hands_its_arguments_to_julia(home, monkeypatch):
     fake_install(home, "1.12.4")
     S.set_default("1.12.4")
     seen = []
-    monkeypatch.setattr(julia_cli.os, "execv", lambda exe, argv: seen.append((exe, argv)))
-    monkeypatch.setattr(julia_cli.subprocess, "call", lambda argv: seen.append((argv[0], argv)) or 0)
+    monkeypatch.setattr(julia_cli.os, "execve", lambda exe, argv, env: seen.append((exe, argv)))
+    monkeypatch.setattr(julia_cli.subprocess, "call", lambda argv, env=None: seen.append((argv[0], argv)) or 0)
     exe = str(S.exe_in(S.version_root("1.12.4")))
     for argv in (["run", "-e", "print(1)", "--check"], ["run", "--", "-e", "print(1)", "--check"]):
         seen.clear()
@@ -302,3 +302,49 @@ def test_use_mentions_a_pin_that_overrides_the_default(home, tmp_path, monkeypat
     monkeypatch.chdir(project)
     assert cli.main(["use", "1.12"]) == 0
     assert "pins Julia 1.10" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------- JULIA_PKG_SERVER
+
+
+def test_pkg_server_is_disabled_by_default_unless_the_user_set_it(home, monkeypatch):
+    monkeypatch.delenv("JULIA_PKG_SERVER", raising=False)
+    assert S.get_setting("disable-pkg-server") is True  # the default, with no config file at all
+    assert S.julia_env()["JULIA_PKG_SERVER"] == ""
+
+    S.set_setting("disable-pkg-server", False)
+    assert "JULIA_PKG_SERVER" not in S.julia_env()
+    S.set_setting("disable-pkg-server", True)
+
+    for explicit in ("https://my.pkg.server", ""):  # an explicit variable always wins, even an empty one
+        monkeypatch.setenv("JULIA_PKG_SERVER", explicit)
+        assert S.julia_env()["JULIA_PKG_SERVER"] == explicit
+    monkeypatch.setenv("JULIA_PKG_SERVER", "https://my.pkg.server")
+    S.set_setting("disable-pkg-server", False)
+    assert S.julia_env()["JULIA_PKG_SERVER"] == "https://my.pkg.server"  # and the config file never overrides it
+
+
+def test_the_setting_survives_other_config_changes_and_garbage_falls_back_to_the_default(home):
+    fake_install(home, "1.12.4")
+    S.set_setting("disable-pkg-server", False)
+    S.set_default("1.12.4")
+    S.sync_config()
+    assert S.get_setting("disable-pkg-server") is False and S.default_version() == "1.12.4"
+    cfg = S.load_config()
+    cfg["disable_pkg_server"] = "maybe"
+    S.save_config(cfg)
+    assert S.get_setting("disable-pkg-server") is True
+
+
+def test_config_command(home, monkeypatch, capsys):
+    monkeypatch.delenv("JULIA_PKG_SERVER", raising=False)
+    assert cli.main(["config"]) == 0 and "disable-pkg-server = true" in capsys.readouterr().out
+    assert cli.main(["config", "disable-pkg-server", "off"]) == 0
+    assert "disable-pkg-server = false" in capsys.readouterr().out and S.get_setting("disable-pkg-server") is False
+    assert cli.main(["config", "disable-pkg-server"]) == 0 and "= false" in capsys.readouterr().out
+    monkeypatch.setenv("JULIA_PKG_SERVER", "https://x")
+    assert cli.main(["config"]) == 0 and "it always wins" in capsys.readouterr().out
+    with pytest.raises(SystemExit, match="unknown setting"):
+        cli.main(["config", "banana", "1"])
+    with pytest.raises(SystemExit, match="true or false"):
+        cli.main(["config", "disable-pkg-server", "maybe"])

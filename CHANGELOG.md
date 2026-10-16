@@ -12,10 +12,18 @@ automatic and does not make a package release.
   `julia-version = "1.10"`; any version spec works). `julia` and `julialang run` use the nearest `.julialang` file found from
   the current directory upwards, so the order is now `JULIALANG_VERSION` > `.julialang` > the default > the newest installed.
   A pin never downloads anything: when no installed version matches, `julia` stops and says which `julialang install` to run.
+- **Packages work where only GitHub is reachable.** `julia` and `julialang run` start Julia with `JULIA_PKG_SERVER=""` by
+  default, so `Pkg.add` uses GitHub instead of the blocked `pkg.julialang.org`. The new `disable_pkg_server` setting of
+  `config.json` (default `true`) turns this off, `julialang config [NAME [VALUE]]` shows or changes it, and a
+  `JULIA_PKG_SERVER` that is already set, even to an empty string, is never touched.
 - `julialang status` shows the pin that applies to the current directory, and `julialang use` mentions a pin that overrides
   the new default.
 - README: a "Pin a version per project" section, a note that julialang.org is crawled every week, and a disclaimer that the
   project is unofficial, with the license of the bundled binaries.
+
+### Changed
+- `julia` starts Julia with `os.execve` and an explicit environment (and `subprocess` with `env=` on Windows), so the
+  environment it passes on is exactly the one `julialang` computed.
 
 ### Fixed
 - README: the table of contents no longer links to sections that were removed in 0.2.1.

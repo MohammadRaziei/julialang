@@ -36,6 +36,7 @@ FAKE_JULIA = """#!/bin/sh
 here="$(cd "$(dirname "$0")/.." && pwd)"
 echo "julia version {v}"
 echo "args: $*"
+echo "pkg server: [${{JULIA_PKG_SERVER-unset}}]"
 echo "lib: $(cat "$here/lib/libfoo.so")"
 "$here/libexec/julia/helper"
 """
@@ -151,6 +152,11 @@ def test_full_pipeline(tmp_path: Path):
     out = julia("--check", "x")
     assert "julia version 9.9.9" in out and "args: --check x" in out and "lib: foo" in out and "helper ok" in out
     assert "args: --check x" in run([bindir / "python", "-m", "julialang", "run", "--check", "x"], env=env)  # = `julia --check x`
+    assert "pkg server: []" in out  # no blocked pkg.julialang.org by default: Pkg uses GitHub
+    assert "pkg server: [https://my.pkg.server]" in julia("x", env={"JULIA_PKG_SERVER": "https://my.pkg.server"})
+    jl("config", "disable-pkg-server", "false")
+    assert "pkg server: [unset]" in julia("x")
+    jl("config", "disable-pkg-server", "true")
     cfg = json.loads((home / "config.json").read_text())
     assert cfg["default"] == "9.9.9" and cfg["installed"]["9.9.9"]["path"] == "versions/9.9.9"
 

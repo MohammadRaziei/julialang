@@ -1,6 +1,8 @@
 """`julia` command: a thin shim that runs the Julia selected by `julialang` with the given arguments.
 
-It never touches the network (unless JULIALANG_AUTO_INSTALL=1 and nothing is installed yet).
+It never touches the network (unless JULIALANG_AUTO_INSTALL=1 and nothing is installed yet). Julia itself runs with
+JULIA_PKG_SERVER="" unless that variable is set or `julialang config disable-pkg-server false` was used
+(see `_state.julia_env`).
 Selection order: $JULIALANG_VERSION > the `.julialang` file of this project (`julialang pin`) > the default
 (`julialang use`) > the newest installed.
 """
@@ -25,12 +27,13 @@ def main(args: list[str] | None = None) -> None:
         manager.auto_install()
     exe = str(S.exe_in(S.resolve_root()))
     argv = [exe, *(sys.argv[1:] if args is None else args)]
+    env = S.julia_env()
     if os.name == "nt":  # os.execv misbehaves with consoles on Windows
         try:
-            sys.exit(subprocess.call(argv))
+            sys.exit(subprocess.call(argv, env=env))
         except KeyboardInterrupt:
             sys.exit(130)
-    os.execv(exe, argv)
+    os.execve(exe, argv, env)
 
 
 if __name__ == "__main__":
