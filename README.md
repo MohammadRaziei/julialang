@@ -247,50 +247,6 @@ push of tag vX.Y.Z ──▶ the same, then → GitHub release vX.Y.Z + PyPI
 **Integrity.** `julialang install` checks the sha256 and md5 from `julia-list.json`. Both come from the same GitHub
 repository as the archives, so this protects against corrupted downloads, not against someone taking over the repository.
 
-## For maintainers
-
-### Set up your own copy
-
-1. Create the repo (default branch `master`; for a name other than `mohammadraziei/julialang` change `DEFAULT_REPO` in
-   `julialang/_state.py` and `tools/sync.py`, and the URLs in `pyproject.toml`) and push.
-2. Settings → Actions → General → Workflow permissions: **Read and write**.
-3. Every push starts **Sync Julia binaries**; run it by hand from the Actions tab for a `dry_run` (shows the plan) or to
-   mirror in slices with `limit`. The first full backfill needs several runs: start it again by hand (or wait for the
-   weekly cron) until nothing is left.
-4. PyPI (optional): add the repository secret `PYPI_PASS` (an API token; for a new project use a token with the scope of
-   the whole account) under Settings → Secrets and variables → Actions. Secrets are per repository, so those of another
-   repo do not apply. `PYPI_USER` is only needed for a non-token login and must be `__token__` when `PYPI_PASS` is a
-   token.
-
-### Release a new version
-
-Versions are bumped by hand: edit `version` in `pyproject.toml`, commit, then tag and push.
-
-```bash
-git tag v0.1.0
-git push origin master v0.1.0
-```
-
-The tag must equal the version in `pyproject.toml` (otherwise `wheel.yml` fails immediately). The tag run publishes the
-GitHub release (with generated notes) and uploads to PyPI. Without the `PYPI_PASS` secret it prints a warning and skips
-the upload: add the secret and re-run the tag's run (`twine upload --skip-existing` and the release step are safe to
-repeat).
-
-Without PyPI, the wheel installs straight from a GitHub release:
-
-```bash
-pip install julialang --find-links https://github.com/MohammadRaziei/julialang/releases/expanded_assets/v0.1.0
-```
-
-### Develop
-
-```bash
-pip install -e . pytest setuptools wheel ruff
-python -m ruff check .
-python -m pytest -q tests          # about a minute; the end-to-end test builds a wheel
-python tools/sync.py --dry-run     # show what would be mirrored
-```
-
 ## Notes
 
 - Julia is MIT-licensed, but its binary distribution bundles third-party libraries under their own licenses (see
