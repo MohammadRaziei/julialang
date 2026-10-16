@@ -193,3 +193,13 @@ def test_run_hands_its_arguments_to_julia(home, monkeypatch):
         except SystemExit:  # the Windows branch exits with Julia's status
             pass
         assert seen == [(exe, [exe, "-e", "print(1)", "--check"])]
+
+
+@pytest.mark.parametrize("flag", ["-v", "--version"])
+def test_version_flags(flag, capsys):
+    from julialang import __version__
+
+    with pytest.raises(SystemExit) as e:
+        cli.main([flag])
+    assert e.value.code == 0
+    assert capsys.readouterr().out.strip() == f"julialang {__version__}"

@@ -276,7 +276,7 @@ def main(argv=None) -> int:
         epilog="Julia lives in ~/.julialang (override with JULIALANG_HOME). "
                "JULIALANG_VERSION=<spec> overrides the default for one command.",
     )
-    p.add_argument("--version", action="version", version=f"julialang {__version__}")
+    p.add_argument("-v", "--version", action="version", version=f"julialang {__version__}")
     sub = p.add_subparsers(dest="cmd", metavar="COMMAND")
     sub.add_parser("run", help="run the selected Julia with the given arguments, like the `julia` command (`julialang run -e 'print(VERSION)'`)")
 

@@ -192,7 +192,7 @@ commas, so `julialang install ">=1.10" "<1.13"` means the same as `julialang ins
 | `julialang self-uninstall [--yes]` | `purge`, then `pip uninstall julialang` |
 | `julialang run [ARGS...]` | run the selected Julia with `ARGS`: the same as the `julia` command (also `python -m julialang run ...`) |
 | `julialang which` | path of the executable `julia` runs |
-| `julialang --version` | version of this package |
+| `julialang -v`, `julialang --version` | version of this package |
 
 The cached version list is trusted for one hour by `status`, `list` and `latest`; `install`, `upgrade`, `downgrade`
 and `fetch` always try the network first and fall back to the cache when offline.
