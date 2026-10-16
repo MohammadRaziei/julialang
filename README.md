@@ -210,48 +210,11 @@ and `fetch` always try the network first and fall back to the cache when offline
 State layout: `~/.julialang/versions/<version>/` holds each Julia, and `~/.julialang/config.json` records the default
 and the installed versions; it is re-synchronised with the folders on every command, so you can also delete a folder by hand.
 
-## How it works
-
-Three kinds of GitHub releases act as storage, and two independent workflows do the work:
-
-| Tag | Kind | Holds |
-| --- | --- | --- |
-| `__download__`, `__download_2__`, ... | prerelease | mirrored Julia archives (`julia-<version>-<os>-<arch>.<ext>`); `__download__` also holds **`julia-list.json`** (md5 + sha256 and URL of every file). GitHub allows ~1000 assets per release, so the mirror starts the next one after 900 files |
-| `__beta__` | prerelease | the latest tested build of master (wheel + sdist) |
-| `vX.Y.Z` | release | the published wheel and sdist |
-
-`julia-list.json` is **not** in git: it is only a release asset, uploaded again after every mirrored version.
-
-```
-julialang.org (crawled) ──▶ sync.yml ──▶ __download__ (+ __download_N__) + julia-list.json asset
-
-push to master ──▶ wheel.yml: ruff + pytest → build wheel/sdist → smoke test on 5 OSes
-                              (pip install, `julialang install` FROM THE MIRROR, run julia) → __beta__
-push of tag vX.Y.Z ──▶ the same, then → GitHub release vX.Y.Z + PyPI
-```
-
-`sync.yml` and `wheel.yml` never call each other.
-
-- **`tools/sync.py`** crawls <https://julialang.org/downloads/manual-downloads/> and
-  <https://julialang.org/downloads/oldreleases/>, downloads every stable Julia that is not mirrored yet
-  (`--min-version` defaults to 0.0.0 = all), verifies it against the upstream sha256 (and md5 when published), uploads
-  it and records md5 + sha256 in `julia-list.json`. Only archives with a verifiable hash and a known name are mirrored:
-  `.tar.gz` for Linux/macOS, `.zip` for Windows (no installers, musl, FreeBSD, pre-releases). `--source json` uses the
-  official `versions.json` feed instead. A full backfill takes many hours, so the job stops itself before the 6 h limit
-  (`--max-minutes`); the next run (weekly cron, a push, or a manual start) continues where it stopped.
-- **`sync.yml`** ("Sync Julia binaries") runs on every push, weekly and by hand. It only updates the mirror: it makes no
-  package release and starts no other workflow.
-- **`wheel.yml`** ("Wheel") runs on every push to master and on tags `v*`. Its smoke test installs Julia from the mirror
-  on every OS, so it doubles as a health check of the mirror.
-
-**Integrity.** `julialang install` checks the sha256 and md5 from `julia-list.json`. Both come from the same GitHub
-repository as the archives, so this protects against corrupted downloads, not against someone taking over the repository.
-
 ## Notes
 
 - Julia is MIT-licensed, but its binary distribution bundles third-party libraries under their own licenses (see
   `share/julia/` and `share/licenses` inside each version). The code in this repository is MIT.
-- The `julia` command of this package may shadow another `julia` (or `juliaup`) earlier on your `PATH`; `julialang which`
+- The `julia` command of this package may shadow another `julia` earlier on your `PATH`; `julialang which`
   shows what is actually run.
 - GitHub pauses scheduled workflows after 60 days without repository activity; if the weekly sync stops, re-enable it in
   the Actions tab.
