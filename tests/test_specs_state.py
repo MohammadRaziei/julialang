@@ -214,3 +214,91 @@ def test_bare_julialang_introduces_itself_before_the_status(home, capsys):
     assert "julialang.org" in out.splitlines()[0] and "platform" in out and "installed" in out
     assert cli.main(["status"]) == 0
     assert "cross-platform" not in capsys.readouterr().out  # the explicit command stays plain
+
+
+# --------------------------------------------------------------------------- .julialang project file
+
+
+def test_project_file_parsing(tmp_path):
+    f = tmp_path / ".julialang"
+    f.write_text('# settings\n\njulia-version = "1.10"   # the LTS line\nfuture-key=abc\n')
+    assert S.read_project_file(f) == {"julia-version": "1.10", "future-key": "abc"}
+    f.write_text("julia-version = '>=1.10,<1.13'\n")
+    assert S.read_project_file(f)["julia-version"] == ">=1.10,<1.13"
+
+
+def test_pin_is_found_in_parent_directories_and_the_home_directory_is_ignored(tmp_path, monkeypatch):
+    project = tmp_path / "proj"
+    deep = project / "src" / "deep"
+    deep.mkdir(parents=True)
+    (tmp_path / ".julialang").mkdir()  # like ~/.julialang: a DIRECTORY, never a pin
+    monkeypatch.chdir(deep)
+    assert S.find_project_file() is None
+    (project / ".julialang").write_text('julia-version = "1.10"\n')
+    assert S.find_project_file() == (project / ".julialang").resolve()
+    assert S.project_pin() == ("1.10", (project / ".julialang").resolve())
+
+
+def test_julia_runs_the_pinned_version_with_the_right_precedence(home, tmp_path, monkeypatch):
+    for v in ("1.10.1", "1.10.5", "1.12.4"):
+        fake_install(home, v)
+    S.set_default("1.12.4")
+    project = tmp_path / "proj"
+    project.mkdir()
+    (project / ".julialang").write_text('julia-version = "1.10"\n')
+    monkeypatch.delenv("JULIALANG_VERSION", raising=False)
+
+    monkeypatch.chdir(tmp_path)
+    assert S.active_version() == "1.12.4"  # outside the project: the default
+    monkeypatch.chdir(project)
+    assert S.active_version() == "1.10.5"  # inside: the pin (newest 1.10.x)
+    monkeypatch.setenv("JULIALANG_VERSION", "1.10.1")
+    assert S.active_version() == "1.10.1"  # the environment variable beats the pin
+
+    monkeypatch.delenv("JULIALANG_VERSION")
+    (project / ".julialang").write_text('julia-version = "1.9"\n')
+    with pytest.raises(SystemExit, match="julialang install 1.9"):
+        S.active_version()
+    (project / ".julialang").write_text('julia-version = "banana"\n')
+    with pytest.raises(SystemExit, match="julia-version"):
+        S.active_version()
+
+
+def test_pin_command_writes_shows_and_removes(home, tmp_path, monkeypatch, capsys):
+    fake_install(home, "1.10.5")
+    project = tmp_path / "proj"
+    project.mkdir()
+    monkeypatch.chdir(project)
+    monkeypatch.delenv("JULIALANG_VERSION", raising=False)
+
+    assert cli.main(["pin"]) == 0 and "Not pinned" in capsys.readouterr().out
+    assert cli.main(["pin", "1.10"]) == 0
+    assert (project / ".julialang").read_text().splitlines()[-1] == 'julia-version = "1.10"'
+    assert "Not installed yet" not in capsys.readouterr().out
+    assert cli.main(["pin"]) == 0 and "Julia 1.10.5" in capsys.readouterr().out
+    assert cli.main(["status"]) == 0 and "pinned      1.10" in capsys.readouterr().out
+
+    # a pin for a version that is not installed says so; other lines of the file survive a change
+    (project / ".julialang").write_text('# mine\nother = 1\njulia-version = "1.10"\n')
+    assert cli.main(["pin", ">=1.12"]) == 0 and "julialang install >=1.12" in capsys.readouterr().out
+    assert (project / ".julialang").read_text() == '# mine\nother = 1\njulia-version = ">=1.12"\n'
+    with pytest.raises(SystemExit):
+        cli.main(["pin", "banana"])
+
+    assert cli.main(["pin", "--remove"]) == 0  # `other = 1` keeps the file alive
+    assert (project / ".julialang").read_text() == "# mine\nother = 1\n"
+    (project / ".julialang").write_text('julia-version = "1.10"\n')
+    assert cli.main(["pin", "--remove"]) == 0 and not (project / ".julialang").exists()
+    with pytest.raises(SystemExit, match="no .julialang"):
+        cli.main(["pin", "--remove"])
+
+
+def test_use_mentions_a_pin_that_overrides_the_default(home, tmp_path, monkeypatch, capsys):
+    for v in ("1.10.5", "1.12.4"):
+        fake_install(home, v)
+    project = tmp_path / "proj"
+    project.mkdir()
+    (project / ".julialang").write_text('julia-version = "1.10"\n')
+    monkeypatch.chdir(project)
+    assert cli.main(["use", "1.12"]) == 0
+    assert "pins Julia 1.10" in capsys.readouterr().out

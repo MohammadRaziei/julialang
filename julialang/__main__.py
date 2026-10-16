@@ -6,6 +6,7 @@ import argparse
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from . import _state as S
 from . import manager as M
@@ -41,6 +42,9 @@ def _tag(v: str, default: str | None) -> str:
 def _make_default(version: str, was: str | None = None) -> None:
     S.set_default(version)
     print(f"Julia {version} is now the default" + (f" (was {was})" if was and was != version else ""))
+    pin = S.project_pin()
+    if pin and S.resolve(pin[0], S.installed_versions()) != version:
+        print(f"note: {pin[1]} pins Julia {pin[0]}, so `julia` keeps using that in this directory")
 
 
 def _replace(target: str, lst: dict, current: str | None) -> None:
@@ -66,6 +70,9 @@ def cmd_status(a) -> int:
     print(f"{'home':<12}{S.home()}")
     print(f"{'installed':<12}{', '.join(reversed(installed)) or '-'}")
     print(f"{'default':<12}{default or '-'}")
+    pin = S.project_pin()
+    if pin:
+        print(f"{'pinned':<12}{pin[0]} ({pin[1]})")
     lst = M.get_list(strict=False)
     latest = S.resolve("latest", M.available_versions(lst)) if lst else None
     print(f"{'latest':<12}{latest or 'unknown'}")
@@ -246,6 +253,32 @@ def cmd_self_uninstall(a) -> int:
     return rc
 
 
+def cmd_pin(a) -> int:
+    """Show, set or remove the Julia version pinned for this project in a `.julialang` file."""
+    here = Path.cwd() / S.PROJECT_FILE
+    if a.remove:
+        if not here.is_file():
+            S.die(f"no {S.PROJECT_FILE} file in {Path.cwd()}")
+        deleted = S.write_project_pin(here, None)
+        print(f"Removed {here}" if deleted else f"Removed the pin from {here}")
+        return 0
+    spec = _spec(a.spec)
+    if not a.spec:  # show
+        pin = S.project_pin()
+        if not pin:
+            print(f"Not pinned: no {S.PROJECT_FILE} file here or in a parent directory (`julialang pin 1.10` creates one).")
+            return 0
+        found = S.resolve(pin[0], S.installed_versions())
+        print(f"{pin[0]}  ({pin[1]}) -> " + (f"Julia {found}" if found else f"not installed; run `julialang install {pin[0]}`"))
+        return 0
+    _check_spec(spec)
+    S.write_project_pin(here, spec)
+    print(f"Pinned Julia {spec} in {here}")
+    if not S.resolve(spec, S.sync_config()):
+        print(f"Not installed yet: run `julialang install {spec}`")
+    return 0
+
+
 def cmd_which(a) -> int:
     print(S.exe_in(S.resolve_root()))
     return 0
@@ -274,7 +307,8 @@ def main(argv=None) -> int:
         prog="julialang",
         description="Install and switch the Julia versions that the `julia` command runs. No command: show status.",
         epilog="Julia lives in ~/.julialang (override with JULIALANG_HOME). "
-               "JULIALANG_VERSION=<spec> overrides the default for one command.",
+               "A .julialang file (`julialang pin`) pins a version per project; "
+               "JULIALANG_VERSION=<spec> overrides everything for one command.",
     )
     p.add_argument("-v", "--version", action="version", version=f"julialang {__version__}")
     sub = p.add_subparsers(dest="cmd", metavar="COMMAND")
@@ -311,6 +345,9 @@ def main(argv=None) -> int:
     ]
     add("purge", cmd_purge, "remove every installed Julia and julialang's data (the pip package stays)", flags=yes_flags)
     add("self-uninstall", cmd_self_uninstall, "purge, then `pip uninstall julialang`", flags=yes_flags)
+    add("pin", cmd_pin, "pin a Julia version for this project in a .julialang file (no spec: show the pin)", spec="*", flags=[
+        ("--remove", dict(action="store_true", help="remove the pin of the current directory")),
+    ])
     add("which", cmd_which, "print the path of the Julia executable that `julia` runs")
 
     args = p.parse_args(argv)

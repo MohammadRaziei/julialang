@@ -23,13 +23,12 @@ pip install julialang && julialang install && julia
 - [Why julialang?](#why-julialang)
 - [Quick start](#quick-start)
 - [Everyday use](#everyday-use)
-  - [Install Julia](#install-julia) · [Run Julia](#run-julia) · [See what you have](#see-what-you-have) · [Switch version](#switch-version) · [Upgrade and downgrade](#upgrade-and-downgrade) · [Remove versions](#remove-versions) · [Remove everything](#remove-everything)
+  - [Install Julia](#install-julia) · [Run Julia](#run-julia) · [See what you have](#see-what-you-have) · [Switch version](#switch-version) · [Pin a version per project](#pin-a-version-per-project) · [Upgrade and downgrade](#upgrade-and-downgrade) · [Remove versions](#remove-versions) · [Remove everything](#remove-everything)
 - [Version specs](#version-specs)
 - [Command reference](#command-reference)
 - [Environment variables](#environment-variables)
-- [How it works](#how-it-works)
-- [For maintainers](#for-maintainers)
 - [Notes](#notes)
+- [Disclaimer](#disclaimer)
 
 ## Why julialang?
 
@@ -45,7 +44,8 @@ tooling. What you get:
 - **No julialang.org needed.** The official binaries are mirrored on GitHub by CI; `julialang` downloads from there and verifies sha256 and md5.
 - **Many versions side by side.** Install as many as you like, switch with one command, upgrade, downgrade, remove.
 - **pip-style version specs.** `julialang install ">=1.10,<1.13"`, `julialang install 1.12`, `julialang install ~=1.12.2`.
-- **Every stable release.** The mirror covers all stable Julia versions, from 0.x to the latest.
+- **Every stable release, kept current.** The mirror covers all stable Julia versions, from 0.x to the latest. A scheduled GitHub
+  Action crawls julialang.org **every week** (and on every push to the repository) and mirrors each new release by itself.
 - **Zero dependencies.** Standard library only. Works on Linux (x86_64, aarch64, i686), macOS (x86_64, arm64) and Windows (x86_64, i686) with Python 3.9+.
 
 ## Quick start
@@ -91,8 +91,8 @@ julialang run script.jl           # the same as `julia script.jl`
 python -m julialang run -e 'print(VERSION)'
 ```
 
-Which Julia runs: `JULIALANG_VERSION` (a spec, must be installed), else the default chosen by `julialang`, else the
-newest installed one. The shim never touches the network. If nothing is installed yet it tells you to run
+Which Julia runs: `JULIALANG_VERSION` (a spec, must be installed), else the version pinned for the project by a
+[`.julialang` file](#pin-a-version-per-project), else the default chosen by `julialang`, else the newest installed one. The shim never touches the network. If nothing is installed yet it tells you to run
 `julialang install` (set `JULIALANG_AUTO_INSTALL=1` to let `julia` install the latest on first use instead).
 
 ### See what you have
@@ -118,6 +118,31 @@ julialang use latest
 ```
 
 `use` never downloads: if the version is not installed it tells you to `julialang install` it first.
+
+### Pin a version per project
+
+A `.julialang` file in a project directory pins the Julia version for that project: every `julia` (and `julialang run`)
+started in that directory or below uses it, whatever the global default is.
+
+```bash
+cd my-project
+julialang pin 1.10                # creates .julialang; any version spec works: 1.10, ">=1.10,<1.13", ~=1.12.2
+julia -e 'print(VERSION)'         # 1.10.x here, the default everywhere else
+julialang pin                     # show the pin that applies to this directory
+julialang pin --remove            # delete the pin of this directory
+```
+
+The file is plain text, one `key = value` per line (`#` starts a comment), and is meant to be committed with the project:
+
+```
+# julialang project settings
+julia-version = "1.10"
+```
+
+`julia-version` is the only setting for now; unknown keys are ignored. The nearest `.julialang` file wins, searching from
+the current directory upwards (the `~/.julialang` *directory* that holds your installed versions is never mistaken for one).
+Order of precedence: `JULIALANG_VERSION` > `.julialang` > the default (`julialang use`) > the newest installed version.
+A pin never downloads anything: if no installed version matches, `julia` stops and tells you to run `julialang install SPEC`.
 
 ### Upgrade and downgrade
 
@@ -191,6 +216,7 @@ commas, so `julialang install ">=1.10" "<1.13"` means the same as `julialang ins
 | `julialang purge [--yes]` | remove all Julia versions and julialang's data; the pip package stays |
 | `julialang self-uninstall [--yes]` | `purge`, then `pip uninstall julialang` |
 | `julialang run [ARGS...]` | run the selected Julia with `ARGS`: the same as the `julia` command (also `python -m julialang run ...`) |
+| `julialang pin [SPEC] [--remove]` | pin a version for this project in a `.julialang` file; without a spec, show the pin |
 | `julialang which` | path of the executable `julia` runs |
 | `julialang -v`, `julialang --version` | version of this package |
 
@@ -212,9 +238,18 @@ and the installed versions; it is re-synchronised with the folders on every comm
 
 ## Notes
 
-- Julia is MIT-licensed, but its binary distribution bundles third-party libraries under their own licenses (see
-  `share/julia/` and `share/licenses` inside each version). The code in this repository is MIT.
 - The `julia` command of this package may shadow another `julia` earlier on your `PATH`; `julialang which`
   shows what is actually run.
 - GitHub pauses scheduled workflows after 60 days without repository activity; if the weekly sync stops, re-enable it in
   the Actions tab.
+
+## Disclaimer
+
+`julialang` is an **unofficial**, community project. It is not affiliated with, endorsed by or sponsored by the Julia
+project, the JuliaLang organization or JuliaHub; "Julia" and the Julia logo belong to their owners. The binaries it
+mirrors are the unmodified official releases from [julialang.org](https://julialang.org), checked against the
+checksums published there when they are mirrored.
+
+Julia itself is MIT-licensed, but its binary distribution bundles third-party libraries under their own licenses (see
+`share/julia/` and `share/licenses` inside each installed version). The code in this repository is MIT licensed
+(see [LICENSE](LICENSE)).

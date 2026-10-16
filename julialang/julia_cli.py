@@ -1,7 +1,8 @@
 """`julia` command: a thin shim that runs the Julia selected by `julialang` with the given arguments.
 
 It never touches the network (unless JULIALANG_AUTO_INSTALL=1 and nothing is installed yet).
-Selection order: $JULIALANG_VERSION > the default (`julialang use`) > the newest installed.
+Selection order: $JULIALANG_VERSION > the `.julialang` file of this project (`julialang pin`) > the default
+(`julialang use`) > the newest installed.
 """
 from __future__ import annotations
 

@@ -5,6 +5,21 @@ All notable changes to **julialang** are listed here, newest first. The format f
 Only changes to the package (`julialang/`, `pyproject.toml`, the workflows) are listed: mirroring a new Julia release is
 automatic and does not make a package release.
 
+## [Unreleased]
+
+### Added
+- **`.julialang` project file** and `julialang pin [SPEC] [--remove]`: pin the Julia version for a project (the setting is
+  `julia-version = "1.10"`; any version spec works). `julia` and `julialang run` use the nearest `.julialang` file found from
+  the current directory upwards, so the order is now `JULIALANG_VERSION` > `.julialang` > the default > the newest installed.
+  A pin never downloads anything: when no installed version matches, `julia` stops and says which `julialang install` to run.
+- `julialang status` shows the pin that applies to the current directory, and `julialang use` mentions a pin that overrides
+  the new default.
+- README: a "Pin a version per project" section, a note that julialang.org is crawled every week, and a disclaimer that the
+  project is unofficial, with the license of the bundled binaries.
+
+### Fixed
+- README: the table of contents no longer links to sections that were removed in 0.2.1.
+
 ## [0.3.0] - 2026-10-17
 
 ### Added
@@ -82,6 +97,7 @@ First release.
 - The sync prefers SHA256 over stale MD5 hashes and resumes after partial failures.
 - Archive file handles are closed after iteration, which prevents cleanup errors on Windows.
 
+[Unreleased]: https://github.com/MohammadRaziei/julialang/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/MohammadRaziei/julialang/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/MohammadRaziei/julialang/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/MohammadRaziei/julialang/compare/v0.1.0...v0.2.0

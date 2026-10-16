@@ -138,8 +138,71 @@ def unregister(version: str) -> None:
     save_config(cfg)
 
 
+# --------------------------------------------------------------------------- project file (.julialang)
+
+PROJECT_FILE = ".julialang"
+PROJECT_KEY = "julia-version"
+
+
+def find_project_file(start: Path | None = None) -> Path | None:
+    """Nearest `.julialang` *file* in `start` (default: the current directory) or one of its parents.
+
+    Only regular files count: the default home `~/.julialang` is a directory and must never be mistaken for one.
+    """
+    here = (start or Path.cwd()).resolve()
+    for d in (here, *here.parents):
+        f = d / PROJECT_FILE
+        if f.is_file():
+            return f
+    return None
+
+
+def read_project_file(path: Path) -> dict[str, str]:
+    """Settings of a `.julialang` file: `key = value` lines, `#` comments, optional quotes, unknown keys kept."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as e:
+        die(f"cannot read {path}: {e}")
+    out: dict[str, str] = {}
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if "=" in line:
+            key, _, value = line.partition("=")
+            out[key.strip()] = value.strip().strip("\"'").strip()
+    return out
+
+
+def project_pin() -> tuple[str, Path] | None:
+    """(version spec, file) pinned for the current directory by the nearest `.julialang`, if any."""
+    f = find_project_file()
+    spec = read_project_file(f).get(PROJECT_KEY) if f else None
+    return (spec, f) if spec and f else None
+
+
+def write_project_pin(path: Path, spec: str | None) -> bool:
+    """Set (or with None remove) the pinned version in `path`, keeping every other line. True if the file was deleted."""
+    lines = path.read_text(encoding="utf-8").splitlines() if path.is_file() else ["# julialang project settings"]
+
+    def is_pin(line: str) -> bool:
+        return line.split("#", 1)[0].partition("=")[0].strip() == PROJECT_KEY
+
+    if spec is None:
+        lines = [line for line in lines if not is_pin(line)]
+        if not any(line.split("#", 1)[0].strip() for line in lines):  # nothing but comments is left
+            path.unlink()
+            return True
+    else:
+        entry = f'{PROJECT_KEY} = "{spec}"'
+        if any(is_pin(line) for line in lines):
+            lines = [entry if is_pin(line) else line for line in lines]
+        else:
+            lines.append(entry)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return False
+
+
 def active_version() -> str | None:
-    """What `julia` runs: $JULIALANG_VERSION (a spec) > the default > the newest installed."""
+    """What `julia` runs: $JULIALANG_VERSION > the `.julialang` pin of this directory > the default > the newest."""
     have = installed_versions()
     env = os.environ.get("JULIALANG_VERSION")
     if env:
@@ -150,6 +213,17 @@ def active_version() -> str | None:
         if v is None:
             die(f"JULIALANG_VERSION={env} matches no installed Julia (installed: {', '.join(have) or 'none'}); "
                 f"run `julialang install {env}`")
+        return v
+    pin = project_pin()
+    if pin:
+        spec, f = pin
+        try:
+            v = resolve(spec, have)
+        except SpecError as e:
+            die(f"{f}: {PROJECT_KEY}: {e}")
+        if v is None:
+            die(f"{f} pins Julia {spec}, but no installed version matches (installed: {', '.join(have) or 'none'}); "
+                f"run `julialang install {spec}`")
         return v
     return default_version() or (have[-1] if have else None)
 
