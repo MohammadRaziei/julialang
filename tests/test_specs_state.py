@@ -9,8 +9,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+from julialang import __main__ as cli  # noqa: E402
 from julialang import _state as S  # noqa: E402
-from julialang import cli  # noqa: E402
 from julialang import manager as M  # noqa: E402
 
 VERSIONS = ["1.0.5", "1.9.4", "1.10.0", "1.10.12", "1.11.9", "1.12.0", "1.12.4", "1.12.7", "1.13.1"]
@@ -131,3 +131,65 @@ def test_list_url_defaults_to_the_download_release(monkeypatch):
     monkeypatch.setenv("JULIALANG_REPO", "me/fork")
     assert M.list_url().startswith("https://github.com/me/fork/")
     assert os.environ["JULIALANG_REPO"] == "me/fork"
+
+
+def test_self_uninstall_purges_then_calls_pip(home, monkeypatch, capsys):
+    for v in ("1.10.1", "1.12.4"):
+        fake_install(home, v)
+    S.set_default("1.12.4")
+    M.cache_path().write_text("{}")
+    calls = []
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: calls.append(cmd) or 0)
+
+    # without a terminal it refuses unless --yes is given
+    monkeypatch.setattr(cli.sys.stdin, "isatty", lambda: False, raising=False)
+    with pytest.raises(SystemExit, match="--yes"):
+        cli.main(["self-uninstall"])
+    assert (home / "versions/1.12.4").exists() and not calls
+
+    assert cli.main(["self-uninstall", "--yes"]) == 0
+    out = capsys.readouterr().out
+    assert "Removed Julia 1.10.1" in out and "Removed Julia 1.12.4" in out
+    assert not home.exists()
+    assert calls == [[cli.sys.executable, "-m", "pip", "uninstall", "-y", "julialang"]]
+
+
+def test_purge_never_runs_pip_and_keeps_foreign_files(home, monkeypatch):
+    fake_install(home, "1.12.4")
+    (home / "mine.txt").write_text("not julialang's")
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: pytest.fail("purge must not run pip"))
+    assert cli.main(["purge", "-y"]) == 0
+    assert (home / "mine.txt").exists() and not (home / "versions").exists() and not (home / "config.json").exists()
+
+
+def test_declining_the_prompt_changes_nothing(home, monkeypatch):
+    fake_install(home, "1.12.4")
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: pytest.fail("pip must not run after Abort"))
+    monkeypatch.setattr(cli.sys.stdin, "isatty", lambda: True, raising=False)
+    monkeypatch.setattr("builtins.input", lambda prompt="": "n")
+    assert cli.main(["self-uninstall"]) == 1
+    assert (home / "versions/1.12.4").exists()
+
+
+def test_self_uninstall_reports_a_pip_failure(home, monkeypatch, capsys):
+    monkeypatch.setattr(cli.subprocess, "call", lambda cmd: 3)
+    assert cli.main(["self-uninstall", "--yes"]) == 3
+    assert "run the command above" in capsys.readouterr().err
+
+
+def test_run_hands_its_arguments_to_julia(home, monkeypatch):
+    from julialang import julia_cli
+
+    fake_install(home, "1.12.4")
+    S.set_default("1.12.4")
+    seen = []
+    monkeypatch.setattr(julia_cli.os, "execv", lambda exe, argv: seen.append((exe, argv)))
+    monkeypatch.setattr(julia_cli.subprocess, "call", lambda argv: seen.append((argv[0], argv)) or 0)
+    exe = str(S.exe_in(S.version_root("1.12.4")))
+    for argv in (["run", "-e", "print(1)", "--check"], ["run", "--", "-e", "print(1)", "--check"]):
+        seen.clear()
+        try:
+            cli.main(argv)
+        except SystemExit:  # the Windows branch exits with Julia's status
+            pass
+        assert seen == [(exe, [exe, "-e", "print(1)", "--check"])]

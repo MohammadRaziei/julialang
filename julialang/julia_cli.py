@@ -16,13 +16,14 @@ def _auto_install_enabled() -> bool:
     return os.environ.get("JULIALANG_AUTO_INSTALL", "").lower() in ("1", "true", "yes", "on")
 
 
-def main() -> None:
+def main(args: list[str] | None = None) -> None:
+    """Run Julia with `args` (default: this process's arguments). Does not return: it replaces/ends the process."""
     if _auto_install_enabled() and not S.installed_versions():
         from . import manager
 
         manager.auto_install()
     exe = str(S.exe_in(S.resolve_root()))
-    argv = [exe, *sys.argv[1:]]
+    argv = [exe, *(sys.argv[1:] if args is None else args)]
     if os.name == "nt":  # os.execv misbehaves with consoles on Windows
         try:
             sys.exit(subprocess.call(argv))

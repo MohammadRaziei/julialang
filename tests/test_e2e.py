@@ -128,10 +128,11 @@ def test_full_pipeline(tmp_path: Path):
     assert wheel.stat().st_size < 100_000
     with zipfile.ZipFile(wheel) as z:
         names = z.namelist()
-        assert "julialang/julia_cli.py" in names and "julialang/cli.py" in names
+        assert {"julialang/julia_cli.py", "julialang/__main__.py"} <= set(names)
+        assert "julialang/cli.py" not in names
         assert not any("_julia" in n or "bundled" in n for n in names)
         scripts = z.read("julialang-0.5.7.dist-info/entry_points.txt").decode()
-        assert "julia = julialang.julia_cli:main" in scripts and "julialang = julialang.cli:main" in scripts
+        assert "julia = julialang.julia_cli:main" in scripts and "julialang = julialang.__main__:main" in scripts
 
     # 4. install it in a fresh venv: before `julialang install` the shim explains what to do
     env_dir = tmp_path / "venv"
@@ -150,6 +151,7 @@ def test_full_pipeline(tmp_path: Path):
     jl("install")  # no spec = latest; becomes the default
     out = julia("--check", "x")
     assert "julia version 9.9.9" in out and "args: --check x" in out and "lib: foo" in out and "helper ok" in out
+    assert "args: --check x" in run([bindir / "python", "-m", "julialang", "run", "--check", "x"], env=env)  # = `julia --check x`
     cfg = json.loads((home / "config.json").read_text())
     assert cfg["default"] == "9.9.9" and cfg["installed"]["9.9.9"]["path"] == "versions/9.9.9"
 

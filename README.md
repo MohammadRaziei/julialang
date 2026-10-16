@@ -74,13 +74,16 @@ julialang install 1.10 --no-default
 
 ### Run Julia
 
-`julia` is a thin shim that runs the selected Julia with your arguments:
+`julia` is a thin shim that runs the selected Julia with your arguments. When only Python is on your `PATH`,
+`julialang run` does the same (everything after `run` goes to Julia):
 
 ```bash
 julia                             # REPL
 julia script.jl                   # run a script
 julia -e 'print(VERSION)'
 JULIALANG_VERSION=1.10 julia -e 'print(VERSION)'   # one command with another installed version
+julialang run script.jl           # the same as `julia script.jl`
+python -m julialang run -e 'print(VERSION)'
 ```
 
 Which Julia runs: `JULIALANG_VERSION` (a spec, must be installed), else the default chosen by `julialang`, else the
@@ -138,11 +141,16 @@ Uninstalling the default promotes the newest remaining version to be the new def
 ### Remove everything
 
 ```bash
-rm -rf ~/.julialang               # all installed Julia versions and the cache (Windows: delete %USERPROFILE%\.julialang)
-pip uninstall julialang
+julialang purge                   # delete every installed Julia and julialang's data; the pip package stays
+julialang self-uninstall          # purge, then `pip uninstall julialang`
 ```
 
-Installed versions live outside your virtual environment, so `pip uninstall julialang` alone leaves them in place.
+Both ask first (`--yes` skips the question). `purge` deletes every installed Julia and julialang's own files in
+`~/.julialang`; `self-uninstall` does the same and then runs `python -m pip uninstall -y julialang` for you. (A
+directory set with `JULIALANG_HOME` is only removed if nothing else lives in it.)
+
+Installed versions live outside your virtual environment, so a plain `pip uninstall julialang` leaves them in place:
+run `julialang self-uninstall` instead, or delete `~/.julialang` (Windows: `%USERPROFILE%\.julialang`) by hand afterwards.
 
 ## Version specs
 
@@ -175,6 +183,9 @@ commas, so `julialang install ">=1.10" "<1.13"` means the same as `julialang ins
 | `julialang use SPEC` | set the default among installed versions |
 | `julialang upgrade [SPEC]` | install the target (latest by default), make it the default, delete the old default |
 | `julialang downgrade SPEC` | the same towards an older version (spec required) |
+| `julialang purge [--yes]` | remove all Julia versions and julialang's data; the pip package stays |
+| `julialang self-uninstall [--yes]` | `purge`, then `pip uninstall julialang` |
+| `julialang run [ARGS...]` | run the selected Julia with `ARGS`: the same as the `julia` command (also `python -m julialang run ...`) |
 | `julialang which` | path of the executable `julia` runs |
 | `julialang --version` | version of this package |
 
