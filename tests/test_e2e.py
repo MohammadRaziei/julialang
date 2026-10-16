@@ -85,8 +85,7 @@ def run(cmd, env=None, check=True, **kw):
 
 
 def test_full_pipeline(tmp_path: Path):
-    pytest.importorskip("setuptools")
-    pytest.importorskip("wheel")
+    pytest.importorskip("hatchling")
     mirror = tmp_path / "mirror"
     work = tmp_path / "work"
     work.mkdir()
@@ -120,8 +119,8 @@ def test_full_pipeline(tmp_path: Path):
     shutil.copytree(ROOT / "julialang", src / "julialang", ignore=shutil.ignore_patterns("__pycache__"))
     for f in ("pyproject.toml", "README.md", "LICENSE"):
         shutil.copy2(ROOT / f, src / f)
-    pyproject = src / "pyproject.toml"
-    pyproject.write_text(re.sub(r'(?m)^version = ".*"$', 'version = "0.5.7"', pyproject.read_text(), count=1))
+    init = src / "julialang" / "__init__.py"  # the one place that holds the version (dynamic in pyproject.toml)
+    init.write_text(re.sub(r'(?m)^__version__ = ".*"', '__version__ = "0.5.7"', init.read_text(), count=1))
     dist = tmp_path / "dist"
     run([sys.executable, "-m", "pip", "wheel", "--no-deps", "--no-build-isolation", "-q", "-w", dist, src])
     wheel = next(dist.glob("julialang-0.5.7-py3-none-any.whl"))

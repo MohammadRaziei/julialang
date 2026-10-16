@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "julialang"
-# Bumped by hand: edit it, commit, then `git tag vX.Y.Z` (must match) and push the tag. Julia versions are managed at run time.
-version = "0.2.1"
+# The version is dynamic: it is `__version__` in julialang/__init__.py (see [tool.hatch.version]).
+dynamic = ["version"]
 description = "Install and switch Julia versions from pip: a tiny wheel plus a GitHub-mirrored copy of the official binaries."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -26,8 +26,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Programming Language :: Python :: 3.15",
     "Topic :: Software Development :: Interpreters",
     "Topic :: Scientific/Engineering",
 ]
@@ -41,8 +39,16 @@ Changelog = "https://github.com/mohammadraziei/julialang/releases"
 julia = "julialang.julia_cli:main"
 julialang = "julialang.__main__:main"
 
-[tool.setuptools.packages.find]
-include = ["julialang*"]
+# Single source of truth: `__version__ = "X.Y.Z"` in julialang/__init__.py. Bump it by hand (or with `hatch version X.Y.Z`),
+# commit, then `git tag vX.Y.Z` (must match) and push the tag.
+[tool.hatch.version]
+path = "julialang/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["julialang"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/julialang", "/tests", "/tools", "/README.md", "/LICENSE", "/pyproject.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

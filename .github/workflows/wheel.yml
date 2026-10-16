@@ -7,9 +7,9 @@ name: Wheel
 #                   from the mirror) -> the files replace the assets of the `__beta__` prerelease
 #   push of v*      the same, then the files go to the GitHub release `vX.Y.Z` and to PyPI
 #
-# Releasing is manual: set `version` in pyproject.toml, commit, then
+# Releasing is manual: set `__version__` in julialang/__init__.py (pyproject.toml reads it), commit, then
 #     git tag v0.1.0 && git push origin master v0.1.0
-# The tag must match the version in pyproject.toml or the run fails at once.
+# The tag must match that version or the run fails at once.
 on:
   workflow_dispatch:
   push:
@@ -40,12 +40,12 @@ jobs:
       - name: Read the version and choose the release
         id: init
         run: |
-          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          version=$(python -c "import julialang; print(julialang.__version__)")  # stdlib only: importable from the checkout
           echo "version=$version" | tee -a "$GITHUB_OUTPUT"
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             tag="${GITHUB_REF#refs/tags/}"
             if [ "$version" != "${tag#v}" ]; then
-              echo "::error title=Version mismatch::tag $tag does not match version $version in pyproject.toml"
+              echo "::error title=Version mismatch::tag $tag does not match __version__ $version in julialang/__init__.py"
               exit 1
             fi
             echo "release_name=$tag" | tee -a "$GITHUB_OUTPUT"
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python -m pip install pytest setuptools wheel ruff
+      - run: python -m pip install pytest hatchling ruff
       - run: python -m ruff check .
       - run: python -m pytest -q tests
 

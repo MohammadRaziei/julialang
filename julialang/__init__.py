@@ -1,11 +1,6 @@
 """julialang: `pip install julialang`, then `julialang install` and run `julia`."""
-from importlib.metadata import PackageNotFoundError
-from importlib.metadata import version as _version
 
-try:
-    __version__ = _version("julialang")
-except PackageNotFoundError:  # running from a source checkout
-    __version__ = "0.0.0.dev0"
+__version__ = "0.0.2"  # the only place to bump: pyproject.toml reads it (hatch); tag the release vX.Y.Z to match
 
 
 def julia_executable() -> str:
