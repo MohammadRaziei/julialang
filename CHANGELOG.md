@@ -16,6 +16,9 @@ automatic and does not make a package release.
   default, so `Pkg.add` uses GitHub instead of the blocked `pkg.julialang.org`. The new `disable_pkg_server` setting of
   `config.json` (default `true`) turns this off, `julialang config [NAME [VALUE]]` shows or changes it, and a
   `JULIA_PKG_SERVER` that is already set, even to an empty string, is never touched.
+- **Every setting can be overridden by an environment variable**, `JULIALANG_<NAME>` (for `disable-pkg-server`:
+  `JULIALANG_DISABLE_PKG_SERVER=true|false`). Order: environment variable > `config.json` > default; `julialang config` shows
+  which one is in effect.
 - `julialang status` shows the pin that applies to the current directory, and `julialang use` mentions a pin that overrides
   the new default.
 - README: a "Pin a version per project" section, a note that julialang.org is crawled every week, and a disclaimer that the

@@ -163,8 +163,11 @@ julialang config disable-pkg-server false  # let Julia use pkg.julialang.org aga
 julialang config disable-pkg-server true   # the default
 ```
 
-The setting lives in `~/.julialang/config.json` (`"disable_pkg_server"`, default `true`). A `JULIA_PKG_SERVER` that is already set
-in your environment, even to an empty string, is your explicit choice: `julialang` never touches it and the setting is ignored.
+The setting lives in `~/.julialang/config.json` (`"disable_pkg_server"`, default `true`). **Every setting can also be overridden by
+an environment variable** named `JULIALANG_` plus the setting in capitals, so here `JULIALANG_DISABLE_PKG_SERVER=false` (`true`/`false`,
+also `1`/`0`, `yes`/`no`, `on`/`off`; empty counts as unset). Order: environment variable > `config.json` > default;
+`julialang config` prints which one is in effect. A `JULIA_PKG_SERVER` that is already set in your environment, even to an empty
+string, is your explicit choice: `julialang` never touches it and the setting is ignored.
 
 ### Upgrade and downgrade
 
@@ -253,6 +256,7 @@ and `fetch` always try the network first and fall back to the cache when offline
 | `JULIALANG_HOME` | where versions, `config.json` and the cache live (default `~/.julialang`) |
 | `JULIALANG_VERSION` | spec of an installed version that `julia` should run, instead of the default |
 | `JULIALANG_AUTO_INSTALL=1` | let `julia` install the latest version on first use |
+| `JULIALANG_DISABLE_PKG_SERVER` | `true`/`false`: overrides the `disable-pkg-server` setting of `config.json` (every setting has such a `JULIALANG_<NAME>` variable) |
 | `JULIA_PKG_SERVER` | Julia's own variable. If set (even empty), `julialang` leaves it alone; otherwise `julia` sets it to empty unless `disable-pkg-server` is `false` |
 | `JULIALANG_REPO` | GitHub repository to read the mirror from (default `MohammadRaziei/julialang`) |
 | `JULIALANG_LIST_URL` | full URL of `julia-list.json`, overriding `JULIALANG_REPO` (useful for your own mirror or tests) |

@@ -348,3 +348,33 @@ def test_config_command(home, monkeypatch, capsys):
         cli.main(["config", "banana", "1"])
     with pytest.raises(SystemExit, match="true or false"):
         cli.main(["config", "disable-pkg-server", "maybe"])
+
+
+def test_every_setting_can_be_overridden_by_an_environment_variable(home, monkeypatch, capsys):
+    monkeypatch.delenv("JULIA_PKG_SERVER", raising=False)
+    monkeypatch.delenv("JULIALANG_DISABLE_PKG_SERVER", raising=False)
+    assert S.env_name("disable-pkg-server") == "JULIALANG_DISABLE_PKG_SERVER"
+    assert S.setting_source("disable-pkg-server") == "default"
+    S.set_setting("disable-pkg-server", False)
+    assert S.setting_source("disable-pkg-server") == "config.json" and "JULIA_PKG_SERVER" not in S.julia_env()
+
+    for text in ("true", "TRUE", "1", "yes", "on"):  # the variable beats config.json
+        monkeypatch.setenv("JULIALANG_DISABLE_PKG_SERVER", text)
+        assert S.get_setting("disable-pkg-server") is True and S.julia_env()["JULIA_PKG_SERVER"] == ""
+    assert S.setting_source("disable-pkg-server") == "JULIALANG_DISABLE_PKG_SERVER"
+    S.set_setting("disable-pkg-server", True)
+    monkeypatch.setenv("JULIALANG_DISABLE_PKG_SERVER", "false")
+    assert S.get_setting("disable-pkg-server") is False and "JULIA_PKG_SERVER" not in S.julia_env()
+    monkeypatch.setenv("JULIALANG_DISABLE_PKG_SERVER", "")  # empty = not set: config.json decides
+    assert S.get_setting("disable-pkg-server") is True
+    monkeypatch.setenv("JULIALANG_DISABLE_PKG_SERVER", "maybe")
+    with pytest.raises(SystemExit, match="JULIALANG_DISABLE_PKG_SERVER must be true or false"):
+        S.get_setting("disable-pkg-server")
+
+    monkeypatch.setenv("JULIALANG_DISABLE_PKG_SERVER", "false")  # `config` says where the value comes from
+    assert cli.main(["config"]) == 0 and "false  (JULIALANG_DISABLE_PKG_SERVER)" in capsys.readouterr().out
+    assert cli.main(["config", "disable-pkg-server", "true"]) == 0
+    assert "overrides config.json" in capsys.readouterr().out
+    monkeypatch.setenv("JULIA_PKG_SERVER", "https://x")  # an explicit JULIA_PKG_SERVER still beats both
+    monkeypatch.setenv("JULIALANG_DISABLE_PKG_SERVER", "true")
+    assert S.julia_env()["JULIA_PKG_SERVER"] == "https://x"

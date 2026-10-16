@@ -70,8 +70,32 @@ def save_config(cfg: dict) -> None:
 SETTINGS = {"disable-pkg-server": ("disable_pkg_server", True)}
 
 
+def env_name(name: str) -> str:
+    """Environment variable that overrides a setting: `disable-pkg-server` -> JULIALANG_DISABLE_PKG_SERVER."""
+    return "JULIALANG_" + name.upper().replace("-", "_")
+
+
+def parse_bool(text: str) -> bool | None:
+    low = text.strip().lower()
+    return True if low in ("1", "true", "yes", "on") else False if low in ("0", "false", "no", "off") else None
+
+
+def setting_source(name: str) -> str:
+    """Where the value of a setting comes from: its environment variable, config.json or the built-in default."""
+    if os.environ.get(env_name(name)):
+        return env_name(name)
+    return "config.json" if isinstance(load_config().get(SETTINGS[name][0]), bool) else "default"
+
+
 def get_setting(name: str) -> bool:
+    """A setting: its JULIALANG_* environment variable (an empty one counts as unset) > config.json > the default."""
     key, default = SETTINGS[name]
+    env = os.environ.get(env_name(name))
+    if env:
+        value = parse_bool(env)
+        if value is None:
+            die(f"{env_name(name)} must be true or false, not '{env}'")
+        return value
     value = load_config().get(key, default)
     return value if isinstance(value, bool) else default
 
@@ -87,7 +111,7 @@ def julia_env() -> dict[str, str]:
     so unless the user decided otherwise Julia runs with JULIA_PKG_SERVER="" (Pkg then uses GitHub through git).
 
     A JULIA_PKG_SERVER that is already set, even to an empty string, is the user's explicit choice and is never touched;
-    otherwise the `disable_pkg_server` setting of config.json decides (default: true).
+    otherwise the `disable-pkg-server` setting decides: $JULIALANG_DISABLE_PKG_SERVER > config.json > true.
     """
     env = dict(os.environ)
     if "JULIA_PKG_SERVER" not in env and get_setting("disable-pkg-server"):
