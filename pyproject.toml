@@ -26,6 +26,8 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Software Development :: Interpreters",
     "Topic :: Scientific/Engineering",
 ]
@@ -33,7 +35,7 @@ classifiers = [
 [project.urls]
 Source = "https://github.com/mohammadraziei/julialang"
 Issues = "https://github.com/mohammadraziei/julialang/issues"
-Changelog = "https://github.com/mohammadraziei/julialang/releases"
+Changelog = "https://github.com/mohammadraziei/julialang/blob/master/CHANGELOG.md"
 
 [project.scripts]
 julia = "julialang.julia_cli:main"

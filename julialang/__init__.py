@@ -1,6 +1,6 @@
 """julialang: `pip install julialang`, then `julialang install` and run `julia`."""
 
-__version__ = "0.0.2"  # the only place to bump: pyproject.toml reads it (hatch); tag the release vX.Y.Z to match
+__version__ = "0.3.0"  # the only place to bump: pyproject.toml reads it (hatch); tag the release vX.Y.Z to match
 
 
 def julia_executable() -> str:
