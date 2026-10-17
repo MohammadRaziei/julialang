@@ -7,6 +7,8 @@ automatic and does not make a package release.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-17
+
 ### Added
 - **Cross-checked checksums.** Each file in `julia-list.json` now records two sha256 values: `sha256` (computed by the mirror
   from the uploaded bytes) and `upstream_sha256` (published by julialang.org); the list is schema 2. When they disagree, or
@@ -117,7 +119,8 @@ First release.
 - The sync prefers SHA256 over stale MD5 hashes and resumes after partial failures.
 - Archive file handles are closed after iteration, which prevents cleanup errors on Windows.
 
-[Unreleased]: https://github.com/MohammadRaziei/julialang/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/MohammadRaziei/julialang/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/MohammadRaziei/julialang/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/MohammadRaziei/julialang/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/MohammadRaziei/julialang/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/MohammadRaziei/julialang/compare/v0.1.0...v0.2.0
