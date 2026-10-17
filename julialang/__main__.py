@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -48,9 +49,9 @@ def _make_default(version: str, was: str | None = None) -> None:
         print(f"note: {pin[1]} pins Julia {pin[0]}, so `julia` keeps using that in this directory")
 
 
-def _replace(target: str, lst: dict, current: str | None) -> None:
+def _replace(target: str, lst: dict, current: str | None, strict: bool | None = None) -> None:
     """Install `target`, make it the default and only then delete the previous default."""
-    M.install(target, lst)
+    M.install(target, lst, strict)
     _make_default(target, current)
     if current and current != target:
         try:
@@ -121,12 +122,19 @@ def cmd_latest(a) -> int:
     return 0
 
 
+EXACT_SPEC = re.compile(r"(==)?\d+\.\d+\.\d+")
+
+
 def cmd_install(a) -> int:
     spec = _spec(a.spec)
     _check_spec(spec)
+    given = a.sha256 or os.environ.get("JULIALANG_SHA256")
+    expected = M.check_hash_arg(given) if given else None
+    if expected and not EXACT_SPEC.fullmatch(spec):
+        S.die(f"a sha256 belongs to one archive: give one exact version such as 1.12.4, not '{spec}'")
     lst = M.get_list(fresh=True)
     v = _pick(spec, lst)
-    M.install(v, lst)
+    M.install(v, lst, True if a.strict else None, expected)
     S.sync_config()
     if a.no_default:
         print(f"Julia {v} installed")
@@ -172,14 +180,14 @@ def cmd_upgrade(a) -> int:
     lst = M.get_list(fresh=True)
     target, current = _pick(spec, lst), S.default_version()
     if current is None:
-        M.install(target, lst)
+        M.install(target, lst, True if a.strict else None)
         _make_default(target)
     elif target == current:
         print(f"Already up to date (Julia {current}).")
     elif S.parse_version(target) < S.parse_version(current):
         S.die(f"Julia {target} is older than the default {current}; use `julialang downgrade {spec}`")
     else:
-        _replace(target, lst, current)
+        _replace(target, lst, current, True if a.strict else None)
     return 0
 
 
@@ -195,7 +203,7 @@ def cmd_downgrade(a) -> int:
     elif S.parse_version(target) > S.parse_version(current):
         S.die(f"Julia {target} is newer than the default {current}; use `julialang upgrade {spec}`")
     else:
-        _replace(target, lst, current)
+        _replace(target, lst, current, True if a.strict else None)
     return 0
 
 
@@ -298,6 +306,24 @@ def cmd_config(a) -> int:
     return 0
 
 
+def cmd_hashes(a) -> int:
+    """Print the sha256 of every mirrored archive of one version, to compare with julialang.org or to pass to --sha256."""
+    spec = _spec(a.spec)
+    lst = M.get_list(fresh=True)
+    v = _pick(spec, lst)
+    files = lst["versions"][v]["files"]
+    print(f"Julia {v}: sha256 of the archives on the mirror (list updated {lst.get('updated') or 'unknown'})")
+    width = max(len(k) for k in files)
+    for key in sorted(files):
+        e = files[key]
+        up = e.get("upstream_sha256")
+        note = ("same as upstream" if up == e["sha256"] else "DIFFERS from upstream " + up if up else "no upstream value")
+        print(f"  {key:<{width}}  {e['sha256']}  {e['name']}  [{note}]")
+    print("Compare them with https://julialang.org/downloads/ (from a machine you trust), then install with"
+          f" `julialang install {v} --sha256 <HEX>`.")
+    return 0
+
+
 def cmd_which(a) -> int:
     print(S.exe_in(S.resolve_root()))
     return 0
@@ -349,16 +375,25 @@ def main(argv=None) -> int:
     ])
     add("fetch", cmd_fetch, "refresh the cached list of mirrored versions")
     add("latest", cmd_latest, "print the newest version on the mirror")
+    strict_flag = ("--strict", dict(action="store_true", help="refuse (download nothing) when the mirror list's two sha256 values \
+disagree or one is missing"))
     add("install", cmd_install, "install a version without removing others (default: latest) and make it the default",
-        spec="*", flags=[("--no-default", dict(action="store_true", help="install only; keep the current default"))])
+        spec="*", flags=[
+            ("--no-default", dict(action="store_true", help="install only; keep the current default")),
+            strict_flag,
+            ("--sha256", dict(metavar="HEX", help="official sha256 of this version's archive for this platform (get it from \
+julialang.org on a machine you trust, or JULIALANG_SHA256); the archive must match it")),
+        ])
     add("uninstall", cmd_uninstall, "delete installed versions", spec="+", aliases=["remove", "rm"], flags=[
         ("--yes", dict(action="store_true", help="do not ask before removing several versions")),
         ("-y", dict(action="store_true", dest="yes", help=argparse.SUPPRESS)),
     ])
     add("use", cmd_use, "make an installed version the default", spec="+")
     add("upgrade", cmd_upgrade, "install a newer version (default: latest), make it the default, remove the old one",
-        spec="*")
-    add("downgrade", cmd_downgrade, "install an older version, make it the default, remove the newer one", spec="+")
+        spec="*", flags=[strict_flag])
+    add("downgrade", cmd_downgrade, "install an older version, make it the default, remove the newer one", spec="+",
+        flags=[strict_flag])
+    add("hashes", cmd_hashes, "show the sha256 of a version's archives on the mirror, to check against julialang.org", spec="*")
     yes_flags = [
         ("--yes", dict(action="store_true", help="do not ask for confirmation")),
         ("-y", dict(action="store_true", dest="yes", help=argparse.SUPPRESS)),

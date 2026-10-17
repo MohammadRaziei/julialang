@@ -8,6 +8,15 @@ automatic and does not make a package release.
 ## [Unreleased]
 
 ### Added
+- **Cross-checked checksums.** Each file in `julia-list.json` now records two sha256 values: `sha256` (computed by the mirror
+  from the uploaded bytes) and `upstream_sha256` (published by julialang.org); the list is schema 2. When they disagree, or
+  `upstream_sha256` is missing, `install`, `upgrade` and `downgrade` print a warning; with the new `--strict` flag, the
+  `strict` setting or `JULIALANG_STRICT=true` they refuse before downloading anything.
+- **`julialang install VERSION --sha256 HEX`** (or `JULIALANG_SHA256`): the archive must match a sha256 the user got from a
+  trusted source; this is the only check that does not rely on the mirror repository. It needs one exact version.
+- `julialang hashes [SPEC]` prints the mirror's sha256 of each platform's archive, marking any that differ from upstream.
+- `tools/sync.py --backfill-upstream` records `upstream_sha256` for existing list entries from what julialang.org publishes
+  now, without downloading; differences are reported and left unset. The `smoke` job of `wheel.yml` runs in strict mode.
 - **`.julialang` project file** and `julialang pin [SPEC] [--remove]`: pin the Julia version for a project (the setting is
   `julia-version = "1.10"`; any version spec works). `julia` and `julialang run` use the nearest `.julialang` file found from
   the current directory upwards, so the order is now `JULIALANG_VERSION` > `.julialang` > the default > the newest installed.

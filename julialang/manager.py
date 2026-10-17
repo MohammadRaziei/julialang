@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import shutil
 import sys
 import tarfile
@@ -113,8 +114,45 @@ def hash_file(path: Path) -> tuple[str, str]:
     return sha.hexdigest(), md5.hexdigest()
 
 
-def verify_file(path: Path, entry: dict) -> None:
+HEX64 = re.compile(r"[0-9a-f]{64}")
+
+
+def check_hash_arg(text: str) -> str:
+    """A sha256 given by the user (--sha256 / JULIALANG_SHA256): 64 hex digits, any case."""
+    value = text.strip().lower()
+    if not HEX64.fullmatch(value):
+        die(f"not a sha256 (64 hex digits expected): '{text}'")
+    return value
+
+
+def cross_check(entry: dict, strict: bool) -> None:
+    """Compare the sha256 the mirror recorded for its own copy with the one julialang.org published.
+
+    The list carries both (`sha256` = what the mirror computed, `upstream_sha256` = what upstream publishes). They differ
+    or the upstream one is missing only if the list is damaged, outdated or was tampered with: warn, or with `strict`
+    refuse before anything is downloaded.
+    """
+    ours, upstream, name = entry["sha256"], entry.get("upstream_sha256"), entry["name"]
+    if upstream is None:
+        problem = f"the mirror list has no upstream sha256 for {name}, so it cannot be cross-checked"
+    elif upstream != ours:
+        problem = (f"the mirror list is inconsistent for {name}: the mirror recorded sha256 {ours} but julialang.org "
+                   f"published {upstream}; the list or the mirror may have been tampered with")
+    else:
+        return
+    if strict:
+        die(f"{problem} (strict mode: nothing was downloaded). Get the official sha256 from julialang.org on a machine "
+            "you trust and pass it with --sha256, or drop --strict")
+    print(f"julialang: warning: {problem}", file=sys.stderr)
+
+
+def verify_file(path: Path, entry: dict, expected: str | None = None) -> None:
+    """Check a downloaded archive. A sha256 given by the user decides alone; otherwise the list's checksums must match."""
     sha, md5 = hash_file(path)
+    if expected is not None:
+        if sha != expected:
+            die(f"{entry['name']} does not match the sha256 you gave (expected {expected}, got {sha}); nothing was installed")
+        return
     if sha != entry["sha256"] or (entry.get("md5") and md5 != entry["md5"]):
         die(f"checksum mismatch for {entry['name']} (expected sha256 {entry['sha256']}, got {sha})")
 
@@ -168,8 +206,12 @@ def extract_archive(archive: Path, dest: Path) -> None:
 # --------------------------------------------------------------------------- install / uninstall
 
 
-def install(version: str, lst: dict) -> Path:
-    """Download, verify and unpack one exact version from the mirror (nothing else is touched)."""
+def install(version: str, lst: dict, strict: bool | None = None, expected: str | None = None) -> Path:
+    """Download, verify and unpack one exact version from the mirror (nothing else is touched).
+
+    `expected` is a sha256 the user got from a trusted source: the archive must match it and the list's own checksums are
+    not consulted. `strict` (default: the `strict` setting) refuses a list whose two sha256 values disagree or are missing.
+    """
     key = platform_key()
     entry = lst.get("versions", {}).get(version, {}).get("files", {}).get(key)
     if not entry:
@@ -179,13 +221,15 @@ def install(version: str, lst: dict) -> Path:
         print(f"Julia {version} is already installed", file=sys.stderr)
         S.register(version, dest)
         return dest
+    if expected is None:
+        cross_check(entry, S.get_setting("strict") if strict is None else strict)
     dest = versions_dir() / version
     versions_dir().mkdir(parents=True, exist_ok=True)
     print(f"Installing Julia {version} ({key}) ...", file=sys.stderr)
     with tempfile.TemporaryDirectory(dir=versions_dir(), prefix=".dl-") as td:
         archive = Path(td) / entry["name"]
         download(entry["url"], archive)
-        verify_file(archive, entry)
+        verify_file(archive, entry, expected)
         extract_archive(archive, dest)
     if not exe_in(dest).exists():
         shutil.rmtree(dest, ignore_errors=True)

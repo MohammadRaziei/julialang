@@ -106,6 +106,7 @@ def test_full_pipeline(tmp_path: Path):
     entry = lst["versions"]["9.9.9"]["files"][KEY]
     assert lst["release_tag"] == "__download__" and lst["latest"] == "9.9.9" and entry["name"] == f"julia-9.9.9-{KEY}.tar.gz"
     assert len(entry["md5"]) == 32 and len(entry["sha256"]) == 64
+    assert entry["upstream_sha256"] == entry["sha256"] and lst["schema"] == 2  # computed by us == published upstream
     assert list(lst["versions"]["9.9.9"]["files"]) == [KEY]  # installer + rc ignored
     assert (mirror / entry["name"]).exists() and (mirror / "julia-list.json").exists()
 

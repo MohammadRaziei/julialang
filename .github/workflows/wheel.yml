@@ -106,6 +106,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     env:
       JULIALANG_REPO: ${{ github.repository }}
+      JULIALANG_STRICT: "true" # fail instead of warn when a list entry's sha256 (ours) and upstream_sha256 disagree or one is missing
     steps:
       - uses: actions/setup-python@v5
         with:
@@ -127,6 +128,7 @@ jobs:
           julialang fetch
           latest=$(julialang latest)
           echo "latest on the mirror: $latest"
+          julialang hashes latest
           julialang install
           got=$(julia -e 'print(VERSION)')
           echo "julia reports: $got"

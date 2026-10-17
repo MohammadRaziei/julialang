@@ -60,6 +60,7 @@ MIRRORED = set(SUFFIX_TO_KEY.values())
 HEX64 = re.compile(r"(?<![0-9a-fA-F])[0-9a-f]{64}(?![0-9a-fA-F])")
 CHECKSUM_LINE = re.compile(r"^([0-9a-fA-F]{32,64})\s+\*?(\S+)\s*$")
 VERSION_RE = re.compile(r"\d+\.\d+\.\d+")
+SCHEMA = 2  # 2: every file also records `upstream_sha256`, what julialang.org published (`sha256` is what we computed)
 NOTES = (
     "Mirror of the official Julia binaries (from julialang.org), used by the `julialang` Python package.\n"
     "Managed by CI - do not edit by hand. The file list with md5/sha256 is `julia-list.json` (in `__download__`)."
@@ -290,7 +291,7 @@ def pick_tag(lst: dict) -> str:
 
 
 def empty_list(repo: str) -> dict:
-    return {"schema": 1, "repo": repo, "release_tag": TAG, "release_tags": [TAG], "latest": None, "updated": None, "versions": {}}
+    return {"schema": SCHEMA, "repo": repo, "release_tag": TAG, "release_tags": [TAG], "latest": None, "updated": None, "versions": {}}
 
 
 def fetch_remote_list(url: str) -> dict | None:
@@ -351,6 +352,32 @@ def publish_list(lst: dict, a: argparse.Namespace, repo: str) -> None:
             gh("release", "upload", TAG, str(asset), "--clobber", "--repo", repo)
 
 
+def backfill_upstream(lst: dict, catalog: dict, checksums_base: str | None = None) -> tuple[int, list[str], list[str]]:
+    """Give every file of the list an `upstream_sha256` taken from what julialang.org publishes now (no downloads).
+
+    A file gets the value only when upstream's sha256 equals the one the list records. Returns (filled, mismatched, unknown):
+    files whose upstream value differs (never written: strict clients refuse them) and files upstream no longer lists.
+    """
+    filled, mismatched, unknown = 0, [], []
+    for ver, meta in lst["versions"].items():
+        upstream = catalog.get(ver, {})
+        todo = [k for k, e in meta["files"].items() if not e.get("upstream_sha256")]
+        if not todo:
+            continue
+        if checksums_base and upstream:
+            add_checksums(ver, upstream, checksums_base)
+        for key in todo:
+            entry, up = meta["files"][key], (upstream.get(key) or {}).get("sha256")
+            if not up:
+                unknown.append(entry["name"])
+            elif up.lower() == entry["sha256"].lower():
+                entry["upstream_sha256"] = up.lower()
+                filled += 1
+            else:
+                mismatched.append(f"{entry['name']}: list {entry['sha256']}, julialang.org {up.lower()}")
+    return filled, mismatched, unknown
+
+
 def plan(catalog: dict, lst: dict, min_version: str, limit: int) -> list[tuple[str, dict]]:
     todo = []
     for ver, files in catalog.items():
@@ -386,6 +413,8 @@ def main() -> int:
     ap.add_argument("--upload", action="store_true", help="upload assets to the mirror releases with `gh`")
     ap.add_argument("--dry-run", action="store_true", help="only print what would be mirrored")
     ap.add_argument("--base-url", help="asset URL prefix recorded in the list (default: the GitHub releases); disables sharding")
+    ap.add_argument("--backfill-upstream", action="store_true",
+                    help="no mirroring: record upstream_sha256 for list entries that lack it (compares with julialang.org, downloads nothing)")
     ap.add_argument("--keep-dir", type=Path, help="also copy downloaded assets and the list here (debugging / tests)")
     a = ap.parse_args()
 
@@ -396,6 +425,17 @@ def main() -> int:
     set_output("more", "false")
 
     catalog = crawl_catalog(a.crawl_url or PAGES) if a.source == "crawl" else json_catalog(json.loads(http_get(a.upstream)))
+    if a.backfill_upstream:
+        filled, mismatched, unknown = backfill_upstream(lst, catalog, a.checksums_base.rstrip("/") if a.source == "crawl" else None)
+        upgraded, lst["schema"] = lst.get("schema") != SCHEMA, SCHEMA
+        print(f"upstream_sha256 recorded for {filled} file(s); {len(unknown)} not listed upstream any more; {len(mismatched)} different")
+        for name in unknown:
+            print(f"  not on julialang.org: {name}", file=sys.stderr)
+        for line in mismatched:
+            print(f"  MISMATCH {line}", file=sys.stderr)
+        if (filled or upgraded) and not a.dry_run:
+            publish_list(lst, a, repo)
+        return 1 if mismatched else 0
     todo = plan(catalog, lst, a.min_version, a.limit)
     if not todo:
         print("Mirror is up to date.")
@@ -454,7 +494,8 @@ def main() -> int:
                         "url": f"{base}/{name}",
                         "size": size,
                         "md5": md5,
-                        "sha256": sha,
+                        "sha256": sha,  # computed here from the bytes that were uploaded
+                        "upstream_sha256": f["sha256"].lower(),  # published by julialang.org; download() required them to match
                     }
                     changed = ver_changed = True
                     write_list(lst, a.list_file)  # progress survives a crash

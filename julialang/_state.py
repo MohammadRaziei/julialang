@@ -67,7 +67,7 @@ def save_config(cfg: dict) -> None:
 
 
 # Settings of config.json that the user may change with `julialang config`: CLI name -> (JSON key, default)
-SETTINGS = {"disable-pkg-server": ("disable_pkg_server", True)}
+SETTINGS = {"disable-pkg-server": ("disable_pkg_server", True), "strict": ("strict", False)}
 
 
 def env_name(name: str) -> str:

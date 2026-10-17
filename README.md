@@ -23,7 +23,7 @@ pip install julialang && julialang install && julia
 - [Why julialang?](#why-julialang)
 - [Quick start](#quick-start)
 - [Everyday use](#everyday-use)
-  - [Install Julia](#install-julia) · [Run Julia](#run-julia) · [See what you have](#see-what-you-have) · [Switch version](#switch-version) · [Pin a version per project](#pin-a-version-per-project) · [Julia packages on restricted networks](#julia-packages-on-restricted-networks) · [Upgrade and downgrade](#upgrade-and-downgrade) · [Remove versions](#remove-versions) · [Remove everything](#remove-everything)
+  - [Install Julia](#install-julia) · [Run Julia](#run-julia) · [See what you have](#see-what-you-have) · [Switch version](#switch-version) · [Pin a version per project](#pin-a-version-per-project) · [Julia packages on restricted networks](#julia-packages-on-restricted-networks) · [Verify downloads](#verify-downloads) · [Upgrade and downgrade](#upgrade-and-downgrade) · [Remove versions](#remove-versions) · [Remove everything](#remove-everything)
 - [Version specs](#version-specs)
 - [Command reference](#command-reference)
 - [Environment variables](#environment-variables)
@@ -169,6 +169,26 @@ also `1`/`0`, `yes`/`no`, `on`/`off`; empty counts as unset). Order: environment
 `julialang config` prints which one is in effect. A `JULIA_PKG_SERVER` that is already set in your environment, even to an empty
 string, is your explicit choice: `julialang` never touches it and the setting is ignored.
 
+### Verify downloads
+
+Every archive is checked against the sha256 (and md5) in the mirror's `julia-list.json` before it is unpacked. That list
+lives in the same GitHub repository as the archives, so on its own it protects against corruption, **not** against
+someone who takes over the repository and changes the archive and the list together. Two things go further:
+
+```bash
+# 1. The list holds two sha256 values per file: the one the mirror computed and the one julialang.org published.
+#    By default a disagreement (or a missing value) only prints a warning; --strict downloads nothing and fails.
+julialang install 1.12.4 --strict
+julialang config strict true            # make it the default (or JULIALANG_STRICT=true)
+
+# 2. The strongest check: bring the official hash yourself. Read it on a machine you trust (https://julialang.org/downloads/),
+#    then the archive must match it, whatever the mirror's list says.
+julialang hashes 1.12.4                 # what the mirror holds, per platform, to compare with julialang.org
+julialang install 1.12.4 --sha256 <HEX> # or JULIALANG_SHA256=<HEX>
+```
+
+`--sha256` belongs to one archive (your platform's), so it needs one exact version such as `1.12.4`.
+
 ### Upgrade and downgrade
 
 `install` keeps old versions; `upgrade` and `downgrade` **replace** the current default:
@@ -233,16 +253,17 @@ commas, so `julialang install ">=1.10" "<1.13"` means the same as `julialang ins
 | `julialang list [--all\|--installed]` | installed and mirrored versions |
 | `julialang fetch` | refresh the cached list of mirrored versions |
 | `julialang latest` | print the newest mirrored version |
-| `julialang install [SPEC...] [--no-default]` | download and install (latest if no spec); makes it the default |
+| `julialang install [SPEC...] [--no-default] [--strict] [--sha256 HEX]` | download and install (latest if no spec); makes it the default; see [Verify downloads](#verify-downloads) |
 | `julialang uninstall SPEC... [--yes]` | delete versions (aliases: `remove`, `rm`) |
 | `julialang use SPEC` | set the default among installed versions |
-| `julialang upgrade [SPEC]` | install the target (latest by default), make it the default, delete the old default |
-| `julialang downgrade SPEC` | the same towards an older version (spec required) |
+| `julialang upgrade [SPEC] [--strict]` | install the target (latest by default), make it the default, delete the old default |
+| `julialang downgrade SPEC [--strict]` | the same towards an older version (spec required) |
+| `julialang hashes [SPEC]` | sha256 of a version's archives on the mirror, to compare with julialang.org |
 | `julialang purge [--yes]` | remove all Julia versions and julialang's data; the pip package stays |
 | `julialang self-uninstall [--yes]` | `purge`, then `pip uninstall julialang` |
 | `julialang run [ARGS...]` | run the selected Julia with `ARGS`: the same as the `julia` command (also `python -m julialang run ...`) |
 | `julialang pin [SPEC] [--remove]` | pin a version for this project in a `.julialang` file; without a spec, show the pin |
-| `julialang config [NAME [VALUE]]` | show or change settings; for now `disable-pkg-server` (default `true`: Julia runs with `JULIA_PKG_SERVER=""`) |
+| `julialang config [NAME [VALUE]]` | show or change settings: `disable-pkg-server` (default `true`: Julia runs with `JULIA_PKG_SERVER=""`) and `strict` (default `false`) |
 | `julialang which` | path of the executable `julia` runs |
 | `julialang -v`, `julialang --version` | version of this package |
 
@@ -257,6 +278,8 @@ and `fetch` always try the network first and fall back to the cache when offline
 | `JULIALANG_VERSION` | spec of an installed version that `julia` should run, instead of the default |
 | `JULIALANG_AUTO_INSTALL=1` | let `julia` install the latest version on first use |
 | `JULIALANG_DISABLE_PKG_SERVER` | `true`/`false`: overrides the `disable-pkg-server` setting of `config.json` (every setting has such a `JULIALANG_<NAME>` variable) |
+| `JULIALANG_STRICT` | `true`/`false`: overrides the `strict` setting: refuse a mirror list whose two sha256 values disagree |
+| `JULIALANG_SHA256` | official sha256 of the one exact version being installed (same as `install --sha256`) |
 | `JULIA_PKG_SERVER` | Julia's own variable. If set (even empty), `julialang` leaves it alone; otherwise `julia` sets it to empty unless `disable-pkg-server` is `false` |
 | `JULIALANG_REPO` | GitHub repository to read the mirror from (default `MohammadRaziei/julialang`) |
 | `JULIALANG_LIST_URL` | full URL of `julia-list.json`, overriding `JULIALANG_REPO` (useful for your own mirror or tests) |
